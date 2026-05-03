@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ApiError } from './apiError';
 
+export const positiveIntSchema = z.coerce.number().int().positive('Harus berupa bilangan bulat positif');
+
 function isValidIsoDate(value: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) {
@@ -45,9 +47,14 @@ export const profileUpdateSchema = z.object({
   profile_picture_url: z.string().trim().url('profile_picture_url harus berupa URL').optional(),
 });
 
+export const isoDateTimeSchema = z
+  .string()
+  .trim()
+  .refine((value) => !Number.isNaN(Date.parse(value)), 'Datetime harus valid');
+
 export const attendanceUpdateSchema = z.object({
-  clock_in: z.string().trim().optional(),
-  clock_out: z.string().trim().optional(),
+  clock_in: isoDateTimeSchema.optional(),
+  clock_out: isoDateTimeSchema.optional(),
   status: z.string().trim().optional(),
 });
 
@@ -56,6 +63,10 @@ export const activityLogsQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
   userId: z.coerce.number().int().min(1).optional(),
   action: z.string().trim().optional(),
+});
+
+export const payrollGenerateSchema = z.object({
+  period: isoDateSchema.optional(),
 });
 
 export const userCreateSchema = z.object({

@@ -30,9 +30,9 @@ psql -U postgres
 # Run these commands in psql:
 ```
 ```sql
-CREATE USER hris_user WITH PASSWORD 'password123';
-CREATE DATABASE mini_hris OWNER hris_user;
-GRANT ALL PRIVILEGES ON DATABASE mini_hris TO hris_user;
+CREATE USER postgres WITH PASSWORD 'changeme';
+CREATE DATABASE mini_hris OWNER postgres;
+GRANT ALL PRIVILEGES ON DATABASE mini_hris TO postgres;
 \q
 ```
 
@@ -49,11 +49,11 @@ NODE_ENV=development
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=mini_hris
-DB_USER=hris_user
-DB_PASSWORD=password123
+DB_USER=postgres
+DB_PASSWORD=changeme
 
 JWT_SECRET=my_secret_key_123
-OFFICE_IP_RANGE=127.0.0.1/32
+OFFICE_IP_PREFIX=127.0.0.
 ```
 
 ---
@@ -72,6 +72,12 @@ npm start
 ```
 
 ✅ Server running on `http://localhost:3000`
+
+If this is a fresh database, run migrations before starting the server:
+
+```bash
+npx sequelize-cli db:migrate
+```
 
 ---
 
@@ -101,6 +107,8 @@ Should get a JSON response (even if error = server is running ✓)
 | POST | `/reimbursements` | ✅ JWT | Submit reimbursement |
 | GET | `/activity-logs` | ✅ Admin | View audit logs |
 
+Note: `/profiles` is PATCH-only in the current server. Use `PATCH /profiles/me` or `PATCH /profiles/:userId`.
+
 ---
 
 ## Useful Commands
@@ -109,7 +117,7 @@ Should get a JSON response (even if error = server is running ✓)
 npm run dev              # Start in development mode
 npm run build           # Compile TypeScript
 npm start               # Start production server
-psql -U hris_user -d mini_hris  # Connect to database
+psql -U postgres -d mini_hris  # Connect to database
 ```
 
 ---
@@ -117,7 +125,7 @@ psql -U hris_user -d mini_hris  # Connect to database
 ## Database Connection Test
 
 ```bash
-psql -U hris_user -d mini_hris -h localhost
+psql -U postgres -d mini_hris -h localhost
 
 # In psql:
 \dt                     # List all tables

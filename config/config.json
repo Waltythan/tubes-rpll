@@ -2,9 +2,25 @@
   "development": {
     "username": "postgres",
     "password": "changeme",
-    "database": "tubesrpll",
+    "database": "mini_hris",
     "host": "127.0.0.1",
     "port": 5432,
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "changeme",
+    "database": "mini_hris_test",
+    "host": "127.0.0.1",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "process.env.DB_USER",
+    "password": "process.env.DB_PASSWORD",
+    "database": "process.env.DB_NAME",
+    "host": "process.env.DB_HOST",
+    "port": "process.env.DB_PORT",
     "dialect": "postgres"
   }
 }

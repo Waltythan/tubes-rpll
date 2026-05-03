@@ -3,7 +3,7 @@ import { jwtAuth, AuthRequest } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { leaveService } from '../services/leaveService';
 import { sendResponse } from '../utils/apiResponse';
-import { leaveRequestSchema, parseWithSchema } from '../utils/requestValidation';
+import { leaveRequestSchema, parseWithSchema, positiveIntSchema } from '../utils/requestValidation';
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequ
     });
 
     const created = await leaveService.requestLeave({
-      userId: Number(req.user!.id),
+      userId: parseWithSchema(positiveIntSchema, req.user!.id),
       startDate: payload.startDate,
       endDate: payload.endDate,
       type: payload.type,
@@ -34,7 +34,7 @@ router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequ
 
 router.get('/me', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await leaveService.listOwn(Number(req.user!.id));
+    const rows = await leaveService.listOwn(parseWithSchema(positiveIntSchema, req.user!.id));
     sendResponse(res, 200, 'Own leave requests fetched', rows);
   } catch (error) {
     next(error);
@@ -43,7 +43,7 @@ router.get('/me', requireRoles('staff', 'manager', 'admin'), async (req: AuthReq
 
 router.get('/team', requireRoles('manager', 'admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await leaveService.listTeam(Number(req.user!.id), req.user!.role);
+    const rows = await leaveService.listTeam(parseWithSchema(positiveIntSchema, req.user!.id), req.user!.role);
     sendResponse(res, 200, 'Team leave requests fetched', rows);
   } catch (error) {
     next(error);
@@ -53,8 +53,8 @@ router.get('/team', requireRoles('manager', 'admin'), async (req: AuthRequest, r
 router.patch('/:id/decision', requireRoles('manager', 'admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const updated = await leaveService.decideLeave({
-      requestId: Number(req.params.id),
-      managerId: Number(req.user!.id),
+      requestId: parseWithSchema(positiveIntSchema, req.params.id),
+      managerId: parseWithSchema(positiveIntSchema, req.user!.id),
       decision: String(req.body?.decision) === 'approved' ? 'approved' : 'declined',
       role: req.user!.role,
     });

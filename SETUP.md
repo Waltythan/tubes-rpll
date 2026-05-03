@@ -164,25 +164,25 @@ Once connected, run these SQL commands:
 
 ```sql
 -- Create database user
-CREATE USER hris_user WITH PASSWORD 'secure_password_123';
+CREATE USER postgres WITH PASSWORD 'changeme';
 
 -- Create database
-CREATE DATABASE mini_hris OWNER hris_user;
+CREATE DATABASE mini_hris OWNER postgres;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE mini_hris TO hris_user;
+GRANT ALL PRIVILEGES ON DATABASE mini_hris TO postgres;
 
 -- Exit psql
 \q
 ```
 
-**Replace `secure_password_123` with your own secure password.**
+**Replace `changeme` with your own password if your local PostgreSQL user differs.**
 
 ### Step 2: Verify Database Connection
 
 ```bash
 # Connect to the new database with the new user
-psql -U hris_user -d mini_hris -h localhost
+psql -U postgres -d mini_hris -h localhost
 ```
 
 If successful, you'll see the `mini_hris=#` prompt.
@@ -230,15 +230,15 @@ NODE_ENV=development
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=mini_hris
-DB_USER=hris_user
-DB_PASSWORD=secure_password_123
+DB_USER=postgres
+DB_PASSWORD=changeme
 
 # JWT Secret (change this in production!)
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
 
 # Office IP Range (for attendance check-in)
 # Use your actual office IP or allow localhost for development
-OFFICE_IP_RANGE=127.0.0.1/32,192.168.1.0/24
+OFFICE_IP_PREFIX=127.0.0.
 
 # Optional: Email Configuration (for password reset)
 # EMAIL_SERVICE=gmail
@@ -247,10 +247,10 @@ OFFICE_IP_RANGE=127.0.0.1/32,192.168.1.0/24
 ```
 
 **Important Security Notes:**
-- Replace `secure_password_123` with the actual password you set
+- Replace `changeme` with the actual password you set
 - Never commit `.env` to Git
 - Change `JWT_SECRET` to a random value in production
-- For office IP, use your actual office network range
+- For office IP, use a prefix that matches your local test network, for example `127.0.0.` or `192.168.1.`
 
 ### Step 4: Add .env to .gitignore
 
@@ -280,7 +280,14 @@ npm run dev
 
 Output should show:
 ```
-Server running on port 3000
+Server running on port 5000
+```
+
+If you have a fresh database, run migrations and seed data before starting the app:
+
+```bash
+npx sequelize-cli db:migrate
+npx sequelize-cli db:seed:all
 ```
 
 ### Option 2: Production Mode
@@ -295,7 +302,7 @@ npm run build
 npm start
 ```
 
-The server will run on `http://localhost:3000`
+The server will run on `http://localhost:5000`
 
 ---
 
@@ -310,17 +317,19 @@ curl http://localhost:3000/auth/login -X POST -H "Content-Type: application/json
 
 You should get a JSON response (even if it's an error, it means the server is running).
 
+For this repository, a `401` response is acceptable for this health check as long as the server responds.
+
 ### Step 2: Verify Database Tables
 
 Connect to the database and check tables:
 
 ```bash
-psql -U hris_user -d mini_hris
+psql -U postgres -d mini_hris
 
 # In psql, list all tables
 \dt
 
-# Should show tables like: users, attendances, leaves, etc.
+# Should show tables like: users, qr_tokens, attendances, profiles, leave_requests, reimbursements, payrolls, payroll_items, and activity_logs.
 ```
 
 ### Step 3: Test a Login Request

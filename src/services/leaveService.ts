@@ -35,9 +35,9 @@ export const leaveService = {
     }
 
     const result = await pool.query(
-      `INSERT INTO leave_requests (user_id, start_date, end_date, type, status, attachment_url)
-       VALUES ($1, $2, $3, $4, 'pending', $5)
-       RETURNING id, user_id, approved_by, start_date, end_date, type, status, attachment_url, created_at`,
+      `INSERT INTO leave_requests (user_id, start_date, end_date, type, status, attachment_url, "createdAt")
+       VALUES ($1, $2, $3, $4, 'pending', $5, NOW())
+       RETURNING id, user_id, approved_by, start_date, end_date, type, status, attachment_url, "createdAt"`,
       [input.userId, input.startDate, input.endDate, input.type, input.attachmentUrl || null]
     );
 
@@ -81,7 +81,7 @@ export const leaveService = {
       `UPDATE leave_requests
        SET status = $2, approved_by = $3
        WHERE id = $1
-       RETURNING id, user_id, approved_by, start_date, end_date, type, status, attachment_url, created_at`,
+       RETURNING id, user_id, approved_by, start_date, end_date, type, status, attachment_url, "createdAt"`,
       [params.requestId, params.decision, params.managerId]
     );
 
@@ -90,10 +90,10 @@ export const leaveService = {
 
   async listOwn(userId: number) {
     const result = await pool.query(
-      `SELECT id, user_id, approved_by, start_date, end_date, type, status, attachment_url, created_at
+      `SELECT id, user_id, approved_by, start_date, end_date, type, status, attachment_url, "createdAt"
        FROM leave_requests
        WHERE user_id = $1
-       ORDER BY created_at DESC`,
+       ORDER BY "createdAt" DESC`,
       [userId]
     );
     return result.rows;
@@ -102,9 +102,9 @@ export const leaveService = {
   async listTeam(managerId: number, role: 'admin' | 'manager' | 'staff') {
     if (role === 'admin') {
       const all = await pool.query(
-        `SELECT id, user_id, approved_by, start_date, end_date, type, status, attachment_url, created_at
+        `SELECT id, user_id, approved_by, start_date, end_date, type, status, attachment_url, "createdAt"
          FROM leave_requests
-         ORDER BY created_at DESC`
+         ORDER BY "createdAt" DESC`
       );
       return all.rows;
     }
@@ -114,11 +114,11 @@ export const leaveService = {
     }
 
     const team = await pool.query(
-      `SELECT lr.id, lr.user_id, lr.approved_by, lr.start_date, lr.end_date, lr.type, lr.status, lr.attachment_url, lr.created_at
+      `SELECT lr.id, lr.user_id, lr.approved_by, lr.start_date, lr.end_date, lr.type, lr.status, lr.attachment_url, lr."createdAt"
        FROM leave_requests lr
        JOIN users u ON u.user_id = lr.user_id
        WHERE u.manager_id = $1
-       ORDER BY lr.created_at DESC`,
+       ORDER BY lr."createdAt" DESC`,
       [managerId]
     );
 

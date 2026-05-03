@@ -41,7 +41,7 @@ async function validateManagerAssignment(userId: number | null | undefined, mana
 export const userService = {
   async listUsers() {
     const result = await pool.query(
-      `SELECT user_id, department_id, email, role, base_salary, manager_id, created_at
+      `SELECT user_id, department_id, email, role, base_salary, manager_id, "createdAt" AS created_at
        FROM users
        ORDER BY user_id ASC`
     );
@@ -56,7 +56,7 @@ export const userService = {
     const result = await pool.query(
       `INSERT INTO users (department_id, email, password, role, base_salary, manager_id)
        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING user_id, department_id, email, role, base_salary, manager_id, created_at`,
+       RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
       [
         input.departmentId || null,
         input.email,
@@ -67,7 +67,11 @@ export const userService = {
       ]
     );
 
-    return result.rows[0];
+    const row = result.rows[0] as { createdAt?: string };
+    return {
+      ...result.rows[0],
+      created_at: row.createdAt,
+    };
   },
 
   async updateUser(userId: number, input: Partial<UserCreateInput>) {
@@ -91,7 +95,7 @@ export const userService = {
            base_salary = COALESCE($6, base_salary),
            manager_id = COALESCE($7, manager_id)
        WHERE user_id = $1
-       RETURNING user_id, department_id, email, role, base_salary, manager_id, created_at`,
+       RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
       [
         userId,
         input.departmentId ?? null,
@@ -103,7 +107,11 @@ export const userService = {
       ]
     );
 
-    return result.rows[0];
+    const row = result.rows[0] as { createdAt?: string };
+    return {
+      ...result.rows[0],
+      created_at: row.createdAt,
+    };
   },
 
   async removeUser(userId: number) {

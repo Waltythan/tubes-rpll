@@ -76,13 +76,17 @@ echo "DB_NAME=mini_hris" >> .env
 echo "DB_USER=hris_user" >> .env
 echo "DB_PASSWORD=password123" >> .env
 echo "JWT_SECRET=my_secret_123" >> .env
-echo "OFFICE_IP_RANGE=127.0.0.1/32" >> .env
+echo "OFFICE_IP_PREFIX=127.0.0." >> .env
 
 # 4. Run
 npm run dev
 ```
 
 ✅ Server running on `http://localhost:3000`
+
+Notes:
+- The app loads `.env` from the project root.
+- Attendance check-in requires an office IP prefix. For local testing, set `OFFICE_IP_PREFIX=127.0.0.` or a forwarded office range such as `192.168.1.`.
 
 See **[QUICK_START.md](QUICK_START.md)** for details.
 
@@ -159,6 +163,7 @@ npm run build && npm start  # Build then run
 # Database (if using migrations)
 npx sequelize-cli db:migrate      # Run migrations
 npx sequelize-cli db:seed:all     # Seed initial data
+npx sequelize-cli db:migrate:status  # Check migration state
 ```
 
 ---
@@ -174,6 +179,8 @@ curl -X POST http://localhost:3000/auth/login \
     "password": "password123"
   }'
 ```
+
+If you are testing against this repository's seeded/dev data, use the credentials you inserted locally. The backend now expects the `.env` file to exist in the project root before startup.
 
 ### Check Activity Logs (Admin)
 ```bash

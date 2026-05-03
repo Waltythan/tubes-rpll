@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { ApiError } from './apiError';
 
 const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret_untuk_dev';
 export type UserRole = 'admin' | 'manager' | 'staff';
@@ -34,7 +35,7 @@ export const generateAttendanceToken = (userId: string, expiresInSeconds = 30) =
 
 export const verifyAttendanceToken = (token: string) => {
   const payload = jwt.verify(token, SECRET_KEY) as any;
-  if (payload.type !== 'attendance') throw new Error('Invalid token type');
+  if (payload.type !== 'attendance') throw new ApiError(400, 'Invalid token type');
   return payload;
 };
 
@@ -45,6 +46,6 @@ export const generatePasswordResetToken = (userId: string, expiresInMinutes = 15
 
 export const verifyPasswordResetToken = (token: string) => {
   const payload = jwt.verify(token, SECRET_KEY) as any;
-  if (payload.type !== 'password_reset') throw new Error('Invalid token type');
+  if (payload.type !== 'password_reset') throw new ApiError(400, 'Invalid token type');
   return payload;
 };

@@ -11,7 +11,7 @@ import {
   getOwnAttendanceHistory,
   getTeamAttendance,
 } from '../controllers/attendanceController';
-import { parseWithSchema, attendanceUpdateSchema } from '../utils/requestValidation';
+import { parseWithSchema, attendanceUpdateSchema, positiveIntSchema } from '../utils/requestValidation';
 import { attendanceService } from '../services/attendanceService';
 import { sendResponse } from '../utils/apiResponse';
 
@@ -62,15 +62,12 @@ router.get(
 // PATCH /attendance/:id - Admin only: edit attendance record
 router.patch('/:id', jwtAuth, requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const attendanceId = Number(req.params.id);
-    if (!Number.isFinite(attendanceId) || attendanceId <= 0) {
-      throw new Error('Invalid attendance id');
-    }
+    const attendanceId = parseWithSchema(positiveIntSchema, req.params.id);
 
     const payload = parseWithSchema(attendanceUpdateSchema, req.body || {});
 
     // additional datetime validation and ordering performed inside service
-    const adminUserId = Number(req.user?.id);
+    const adminUserId = parseWithSchema(positiveIntSchema, req.user?.id);
 
     const updated = await attendanceService.updateAttendance({
       attendanceId,

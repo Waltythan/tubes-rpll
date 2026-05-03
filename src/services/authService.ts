@@ -13,37 +13,7 @@ type LoginResult = {
   };
 };
 
-async function ensureUsersTable() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      user_id SERIAL PRIMARY KEY,
-      email VARCHAR(255) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL,
-      role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'manager', 'staff')),
-      manager_id INTEGER,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
-}
-
-async function ensureActivityLogsTable() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS activity_logs (
-      id BIGSERIAL PRIMARY KEY,
-      user_id INTEGER,
-      action VARCHAR(120) NOT NULL,
-      target_table VARCHAR(80),
-      target_id VARCHAR(80),
-      ip_address VARCHAR(64),
-      user_agent TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
-}
-
 async function logFailedLoginAttempt(email: string, clientIp?: string) {
-  await ensureActivityLogsTable();
-
   const userResult = await pool.query(
     'SELECT user_id FROM users WHERE email = $1 LIMIT 1',
     [email]
@@ -60,8 +30,6 @@ async function logFailedLoginAttempt(email: string, clientIp?: string) {
 
 export const authService = {
   async login(email: string, password: string, clientIp?: string): Promise<LoginResult> {
-    await ensureUsersTable();
-
     const result = await pool.query(
       `SELECT user_id, email, password, role, manager_id
        FROM users
@@ -107,8 +75,6 @@ export const authService = {
   },
 
   async forgotPassword(email: string) {
-    await ensureUsersTable();
-
     const userResult = await pool.query(
       `SELECT user_id, email FROM users WHERE email = $1 LIMIT 1`,
       [email]
@@ -120,9 +86,6 @@ export const authService = {
     }
 
     const user = userResult.rows[0] as { user_id: number; email: string };
-
-    // ensure password reset table
-    await ensurePasswordResetTable();
 
     const token = generatePasswordResetToken(String(user.user_id), 15);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
@@ -138,9 +101,6 @@ export const authService = {
   },
 
   async resetPassword(token: string, newPassword: string) {
-    await ensureUsersTable();
-    await ensurePasswordResetTable();
-
     // Verify JWT signature & payload first
     let payload: any;
     try {
@@ -189,15 +149,3 @@ export const authService = {
   },
 };
 
-async function ensurePasswordResetTable() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS password_reset_tokens (
-      id BIGSERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL,
-      token TEXT NOT NULL,
-      used BOOLEAN NOT NULL DEFAULT FALSE,
-      expires_at TIMESTAMPTZ NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
-}

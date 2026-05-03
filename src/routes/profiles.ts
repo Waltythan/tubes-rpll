@@ -3,7 +3,8 @@ import { jwtAuth } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { profileService } from '../services/profileService';
 import { sendResponse } from '../utils/apiResponse';
-import { parseWithSchema, profileUpdateSchema } from '../utils/requestValidation';
+import { ApiError } from '../utils/apiError';
+import { parseWithSchema, profileUpdateSchema, positiveIntSchema } from '../utils/requestValidation';
 
 const router = express.Router();
 
@@ -12,11 +13,11 @@ router.patch('/me', jwtAuth, async (req: Request, res: Response, next: NextFunct
   try {
     const authReq = req as any;
     const user = authReq.user;
-    if (!user) throw new Error('Unauthorized');
+    if (!user) throw new ApiError(401, 'Unauthorized');
 
     const payload = parseWithSchema(profileUpdateSchema, req.body || {});
 
-    const updated = await profileService.upsertProfile(Number(user.id), payload);
+    const updated = await profileService.upsertProfile(parseWithSchema(positiveIntSchema, user.id), payload);
     sendResponse(res, 200, 'Profile updated', updated);
   } catch (err) {
     next(err);
@@ -26,10 +27,7 @@ router.patch('/me', jwtAuth, async (req: Request, res: Response, next: NextFunct
 // Admin update any user's profile
 router.patch('/:userId', jwtAuth, requireRoles('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const targetId = Number(req.params.userId);
-    if (!Number.isFinite(targetId) || targetId <= 0) {
-      throw new Error('Invalid user id');
-    }
+    const targetId = parseWithSchema(positiveIntSchema, req.params.userId);
 
     const payload = parseWithSchema(profileUpdateSchema, req.body || {});
 

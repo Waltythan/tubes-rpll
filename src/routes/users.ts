@@ -3,7 +3,7 @@ import { jwtAuth, AuthRequest } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { userService } from '../services/userService';
 import { sendResponse } from '../utils/apiResponse';
-import { parseWithSchema, userCreateSchema, userUpdateSchema } from '../utils/requestValidation';
+import { parseWithSchema, userCreateSchema, userUpdateSchema, positiveIntSchema } from '../utils/requestValidation';
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
 
 router.patch('/:userId', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const userId = Number(req.params.userId);
+    const userId = parseWithSchema(positiveIntSchema, req.params.userId);
     const updated = await userService.updateUser(userId, parseWithSchema(userUpdateSchema, req.body));
 
     sendResponse(res, 200, 'User updated', updated);
@@ -40,7 +40,7 @@ router.patch('/:userId', async (req: AuthRequest, res: Response, next: NextFunct
 
 router.delete('/:userId', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const userId = Number(req.params.userId);
+    const userId = parseWithSchema(positiveIntSchema, req.params.userId);
     const result = await userService.removeUser(userId);
     sendResponse(res, 200, 'User deleted', result);
   } catch (error) {

@@ -240,7 +240,7 @@ Response (200):
 ```json
 {
   "status": "success",
-  "message": "QR token generated",
+  "message": "QR attendance token generated",
   "data": {
     "qrToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
     "expiresIn": 30,
@@ -250,6 +250,8 @@ Response (200):
 ```
 
 **Note:** Token valid for 30 seconds only, single-use
+
+**Important:** Check-in also requires an office IP prefix that matches `OFFICE_IP_PREFIX` in `.env` (default is `192.168.`). For local testing, set that prefix to your local network or provide a matching forwarded IP.
 
 ---
 
@@ -274,7 +276,7 @@ Response (200):
 ```json
 {
   "status": "success",
-  "message": "Check-in successful",
+  "message": "Check-in berhasil",
   "data": {
     "id": 101,
     "user_id": 5,
@@ -302,7 +304,7 @@ Response (200):
 ```json
 {
   "status": "success",
-  "message": "Check-out successful",
+  "message": "Check-out berhasil",
   "data": {
     "id": 101,
     "clock_out": "2024-05-03T17:00:00Z",
@@ -358,6 +360,26 @@ Response (200): Array of all team members' attendance
 
 ### 6. Admin Edit Attendance
 **PATCH** `/attendance/:id`
+
+Authentication: ✅ Required (Admin only)
+
+Request:
+```json
+{
+  "clock_in": "2024-05-03T08:00:00Z",
+  "clock_out": "2024-05-03T17:00:00Z",
+  "status": "present"
+}
+```
+
+Response (200):
+```json
+{
+  "status": "success",
+  "message": "Attendance updated",
+  "data": { /* updated attendance */ }
+}
+```
 
 Authentication: ✅ Required (Admin only)
 
@@ -447,8 +469,7 @@ Authentication: ✅ Required (Manager/Admin)
 Request:
 ```json
 {
-  "status": "approved",
-  "notes": "Approved as scheduled"
+  "decision": "approved"
 }
 ```
 
@@ -456,7 +477,7 @@ Response (200):
 ```json
 {
   "status": "success",
-  "message": "Leave decision updated",
+  "message": "Leave request updated",
   "data": { /* updated leave request */ }
 }
 ```
@@ -539,16 +560,21 @@ Authentication: ✅ Required (Admin)
 Request:
 ```json
 {
-  "period": "2024-05"
+  "period": "2024-05-01"
 }
 ```
 
-Response (201):
+Response (200):
 ```json
 {
   "status": "success",
   "message": "Payroll generated",
-  "data": { /* payroll records */ }
+  "data": {
+    "periodStart": "2024-05-01",
+    "periodEnd": "2024-05-31",
+    "payrollCount": 6,
+    "generatedPayrolls": [ /* payroll records */ ]
+  }
 }
 ```
 
@@ -573,7 +599,7 @@ Response (201):
 ```json
 {
   "status": "success",
-  "message": "Adjustment added",
+  "message": "Payroll adjustment added",
   "data": { /* adjustment */ }
 }
 ```
@@ -620,6 +646,8 @@ Response (200):
 Authentication: ✅ Required (Admin only)
 
 Same as above but for any user
+
+Note: this module intentionally exposes PATCH-only operations. There is no GET /profiles route in the current server.
 
 ---
 

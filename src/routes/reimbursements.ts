@@ -3,7 +3,7 @@ import { jwtAuth, AuthRequest } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { reimbursementService } from '../services/reimbursementService';
 import { sendResponse } from '../utils/apiResponse';
-import { parseWithSchema, reimbursementSubmitSchema } from '../utils/requestValidation';
+import { parseWithSchema, reimbursementSubmitSchema, positiveIntSchema } from '../utils/requestValidation';
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequ
     });
 
     const created = await reimbursementService.submit({
-      userId: Number(req.user!.id),
+      userId: parseWithSchema(positiveIntSchema, req.user!.id),
       title: payload.title,
       description: payload.description,
       amount: payload.amount,
@@ -34,7 +34,7 @@ router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequ
 
 router.get('/me', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await reimbursementService.listOwn(Number(req.user!.id));
+    const rows = await reimbursementService.listOwn(parseWithSchema(positiveIntSchema, req.user!.id));
     sendResponse(res, 200, 'Own reimbursements fetched', rows);
   } catch (error) {
     next(error);
@@ -43,7 +43,7 @@ router.get('/me', requireRoles('staff', 'manager', 'admin'), async (req: AuthReq
 
 router.get('/team', requireRoles('manager', 'admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const rows = await reimbursementService.listTeam(Number(req.user!.id), req.user!.role);
+    const rows = await reimbursementService.listTeam(parseWithSchema(positiveIntSchema, req.user!.id), req.user!.role);
     sendResponse(res, 200, 'Team reimbursements fetched', rows);
   } catch (error) {
     next(error);
@@ -53,8 +53,8 @@ router.get('/team', requireRoles('manager', 'admin'), async (req: AuthRequest, r
 router.patch('/:id/decision', requireRoles('manager', 'admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const updated = await reimbursementService.decide({
-      reimbursementId: Number(req.params.id),
-      approverId: Number(req.user!.id),
+      reimbursementId: parseWithSchema(positiveIntSchema, req.params.id),
+      approverId: parseWithSchema(positiveIntSchema, req.user!.id),
       decision: String(req.body?.decision) === 'approved' ? 'approved' : 'rejected',
       role: req.user!.role,
     });

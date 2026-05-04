@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
@@ -49,6 +49,10 @@ export default function Login(): JSX.Element {
           <form className="form-grid" onSubmit={submit}>
             <Input label="Email" type="email" placeholder="name@company.com" value={email} onChange={(event) => setEmail(event.target.value)} disabled={isLoading} />
             <Input label="Password" type="password" placeholder="Enter your password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={isLoading} />
+
+            <div className="auth-links">
+              <Link to="/forgot-password">Forgot Password?</Link>
+            </div>
 
             {error && <div className="alert alert-error">{error}</div>}
 

@@ -21,6 +21,14 @@ export interface LoginResult {
   user: AuthUser
 }
 
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post('/auth/forgot', { email })
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await api.post('/auth/reset', { token, newPassword })
+}
+
 interface BackendResponse<T> {
   status: string
   message: string

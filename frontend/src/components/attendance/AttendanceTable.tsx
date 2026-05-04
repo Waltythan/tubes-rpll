@@ -36,8 +36,15 @@ export default function AttendanceTable({ items, loading }: AttendanceTableProps
   if (loading) {
     return (
       <div className="table-container">
-        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>
-          Loading attendance records…
+        <div className="table-skeleton" aria-hidden="true">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div className="table-skeleton-row" key={index}>
+              <span className="skeleton skeleton-date" />
+              <span className="skeleton skeleton-time" />
+              <span className="skeleton skeleton-time" />
+              <span className="skeleton skeleton-badge" />
+            </div>
+          ))}
         </div>
       </div>
     )
@@ -46,9 +53,7 @@ export default function AttendanceTable({ items, loading }: AttendanceTableProps
   if (!items || items.length === 0) {
     return (
       <div className="table-container">
-        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>
-          No attendance records found.
-        </div>
+        <div className="table-empty">No attendance yet.</div>
       </div>
     )
   }
@@ -59,8 +64,8 @@ export default function AttendanceTable({ items, loading }: AttendanceTableProps
         <thead className="table-head">
           <tr>
             <th className="table-header">Date</th>
-            <th className="table-header">Check-in</th>
-            <th className="table-header">Check-out</th>
+            <th className="table-header">Clock In</th>
+            <th className="table-header">Clock Out</th>
             <th className="table-header">Status</th>
           </tr>
         </thead>

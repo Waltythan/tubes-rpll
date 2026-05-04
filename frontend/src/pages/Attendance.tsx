@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import AttendanceCard from '../components/attendance/AttendanceCard'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AttendanceTable from '../components/attendance/AttendanceTable'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
+import Badge from '../components/common/Badge'
+import FullPageLoader from '../components/common/FullPageLoader'
 import { useLoading } from '../hooks/useLoading'
 import { hrService, type AttendanceItem, type QrTokenResponse } from '../services/hrService'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface TodayAttendance {
   checkedIn: boolean
@@ -12,6 +14,45 @@ interface TodayAttendance {
   checkInTime: string | null
   checkOutTime: string | null
   status: string | null
+  dateLabel: string | null
+}
+
+interface BannerState {
+  tone: 'success' | 'danger' | 'primary' | 'warning'
+  message: string
+}
+
+const QR_TTL_SECONDS = 30
+
+function formatTime(isoString: string | null | undefined): string {
+  if (!isoString) return '—'
+  try {
+    return new Date(isoString).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return isoString
+  }
+}
+
+function formatDate(isoString: string | null | undefined): string {
+  if (!isoString) return '—'
+  try {
+    return new Date(isoString).toLocaleDateString([], {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  } catch {
+    return isoString
+  }
+}
+
+function getDateKey(value: string | null | undefined): string {
+  if (!value) return ''
+  return value.slice(0, 10)
 }
 
 export default function Attendance(): JSX.Element {
@@ -23,120 +64,162 @@ export default function Attendance(): JSX.Element {
     checkInTime: null,
     checkOutTime: null,
     status: null,
+    dateLabel: null,
   })
   const [qrToken, setQrToken] = useState<QrTokenResponse | null>(null)
-  const [qrInput, setQrInput] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
+  const [historyLoading, setHistoryLoading] = useState<boolean>(false)
+  const [qrLoading, setQrLoading] = useState<boolean>(false)
   const [actionLoading, setActionLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const qrInputRef = useRef<HTMLInputElement>(null)
+  const [banner, setBanner] = useState<BannerState | null>(null)
+  const [countdown, setCountdown] = useState<number>(0)
+  const countdownRef = useRef<number | null>(null)
+  const successTimeoutRef = useRef<number | null>(null)
+  const isMountedRef = useRef(true)
 
-  // Load initial data
-  useEffect(() => {
-    let active = true
+  const todayKey = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
-    async function loadData(): Promise<void> {
-      try {
-        setError(null)
-        const data = await hrService.attendance()
+  const todayRecord = useMemo(() => {
+    return attendanceList.find((item) => getDateKey(item.date || item.clock_in || item.createdAt) === todayKey) || null
+  }, [attendanceList, todayKey])
 
-        if (!active) return
+  const qrExpired = qrToken ? countdown <= 0 : true
 
-        setAttendanceList(data)
+  function clearBannerSoon(message: BannerState): void {
+    setBanner(message)
+    if (successTimeoutRef.current !== null) {
+      window.clearTimeout(successTimeoutRef.current)
+    }
+    successTimeoutRef.current = window.setTimeout(() => {
+      setBanner(null)
+    }, 3200)
+  }
 
-        // Get today's status from the first record (most recent)
-        if (data.length > 0) {
-          const today = data[0]
-          const dateKey = new Date().toISOString().slice(0, 10)
-          const todayKey = today.date ? today.date.slice(0, 10) : ''
+  function syncTodayStatus(records: AttendanceItem[]): void {
+    const record = records.find((item) => getDateKey(item.date || item.clock_in || item.createdAt) === todayKey) || null
 
-          if (todayKey === dateKey) {
-            setTodayStatus({
-              checkedIn: !!today.clock_in,
-              checkedOut: !!today.clock_out,
-              checkInTime: today.clock_in ? new Date(today.clock_in).toLocaleTimeString() : null,
-              checkOutTime: today.clock_out ? new Date(today.clock_out).toLocaleTimeString() : null,
-              status: today.status || null,
-            })
-          }
-        }
-      } catch (err: unknown) {
-        if (active) {
-          setError(err instanceof Error ? err.message : 'Failed to load attendance data')
-        }
-      } finally {
-        if (active) setLoading(false)
-      }
+    setTodayStatus({
+      checkedIn: Boolean(record?.clock_in),
+      checkedOut: Boolean(record?.clock_out),
+      checkInTime: record?.clock_in ? formatTime(record.clock_in) : null,
+      checkOutTime: record?.clock_out ? formatTime(record.clock_out) : null,
+      status: record?.status || null,
+      dateLabel: record?.date ? formatDate(record.date) : formatDate(todayKey),
+    })
+  }
+
+  async function refreshAttendance(silent = false): Promise<void> {
+    if (!silent) {
+      setHistoryLoading(true)
     }
 
-    void loadData()
+    try {
+      const data = await hrService.attendanceHistory()
+      if (!isMountedRef.current) return
+
+      setAttendanceList(data)
+      syncTodayStatus(data)
+    } catch (err: unknown) {
+      if (!isMountedRef.current) return
+      setBanner({ tone: 'danger', message: err instanceof Error ? err.message : 'Failed to load attendance data' })
+    } finally {
+      if (isMountedRef.current && !silent) {
+        setHistoryLoading(false)
+      }
+    }
+  }
+
+  async function generateQr(): Promise<void> {
+    try {
+      setQrLoading(true)
+      setBanner(null)
+      const token = await hrService.getQrToken()
+      if (!isMountedRef.current) return
+
+      setQrToken(token)
+      setCountdown(token.expiresIn || QR_TTL_SECONDS)
+    } catch (err: unknown) {
+      if (!isMountedRef.current) return
+      setBanner({ tone: 'danger', message: err instanceof Error ? err.message : 'Failed to generate QR token' })
+    } finally {
+      if (isMountedRef.current) {
+        setQrLoading(false)
+      }
+    }
+  }
+
+  useEffect(() => {
+    isMountedRef.current = true
+    void withLoading(async () => {
+      setLoading(true)
+      await refreshAttendance(true)
+      setLoading(false)
+    })
+
     return () => {
-      active = false
+      isMountedRef.current = false
+      if (countdownRef.current !== null) {
+        window.clearInterval(countdownRef.current)
+      }
+      if (successTimeoutRef.current !== null) {
+        window.clearTimeout(successTimeoutRef.current)
+      }
     }
   }, [])
 
-  // Generate QR token when component mounts
   useEffect(() => {
-    let active = true
+    if (!qrToken?.expiresAt) {
+      setCountdown(0)
+      return undefined
+    }
 
-    async function generateQr(): Promise<void> {
-      try {
-        const token = await hrService.getQrToken()
-        if (active) {
-          setQrToken(token)
-        }
-      } catch (err: unknown) {
-        if (active) {
-          setError(err instanceof Error ? err.message : 'Failed to generate QR token')
-        }
+    const tick = (): void => {
+      const remaining = Math.max(0, Math.ceil((new Date(qrToken.expiresAt).getTime() - Date.now()) / 1000))
+      setCountdown(remaining)
+
+      if (remaining <= 0) {
+        setBanner({ tone: 'warning', message: 'QR expired. Generate a new one to continue.' })
+        setQrToken(null)
       }
     }
 
-    void generateQr()
-    return () => {
-      active = false
+    tick()
+    if (countdownRef.current !== null) {
+      window.clearInterval(countdownRef.current)
     }
-  }, [])
+
+    countdownRef.current = window.setInterval(tick, 1000)
+
+    return () => {
+      if (countdownRef.current !== null) {
+        window.clearInterval(countdownRef.current)
+      }
+    }
+  }, [qrToken?.expiresAt])
 
   const handleCheckIn = async (): Promise<void> => {
     if (!qrToken?.qrToken) {
-      setError('QR token not available. Please refresh the page.')
+      setBanner({ tone: 'danger', message: 'Generate a QR code first.' })
       return
     }
 
-    if (todayStatus.checkedIn && !todayStatus.checkedOut) {
-      setError('You have already checked in. Use Check Out instead.')
+    if (qrExpired) {
+      setBanner({ tone: 'warning', message: 'QR token expired. Generate a new QR code.' })
       return
     }
 
     try {
       setActionLoading(true)
-      setError(null)
-      setSuccessMessage(null)
+      setBanner(null)
 
-      await withLoading(() => hrService.checkIn(qrToken.qrToken))
+      await hrService.checkIn(qrToken.qrToken)
 
-      setSuccessMessage('✓ Check-in successful!')
-      setTodayStatus((prev) => ({
-        ...prev,
-        checkedIn: true,
-        checkInTime: new Date().toLocaleTimeString(),
-        status: 'present',
-      }))
-
-      // Refresh the attendance list
-      const updated = await hrService.attendance()
-      setAttendanceList(updated)
-
-      // Clear QR input and regenerate token
-      setQrInput('')
-      const newToken = await hrService.getQrToken()
-      setQrToken(newToken)
-
-      setTimeout(() => setSuccessMessage(null), 3000)
+      clearBannerSoon({ tone: 'success', message: 'Check-in successful.' })
+      setQrToken(null)
+      setCountdown(0)
+      await refreshAttendance(true)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Check-in failed')
+      setBanner({ tone: 'danger', message: err instanceof Error ? err.message : 'Check-in failed' })
     } finally {
       setActionLoading(false)
     }
@@ -144,179 +227,150 @@ export default function Attendance(): JSX.Element {
 
   const handleCheckOut = async (): Promise<void> => {
     if (!todayStatus.checkedIn) {
-      setError('You must check in first before checking out.')
+      setBanner({ tone: 'warning', message: 'You must check in first before checking out.' })
       return
     }
 
     if (todayStatus.checkedOut) {
-      setError('You have already checked out today.')
+      setBanner({ tone: 'warning', message: 'You have already checked out today.' })
       return
     }
 
     try {
       setActionLoading(true)
-      setError(null)
-      setSuccessMessage(null)
+      setBanner(null)
 
-      await withLoading(() => hrService.checkOut())
+      await hrService.checkOut()
 
-      setSuccessMessage('✓ Check-out successful!')
-      setTodayStatus((prev) => ({
-        ...prev,
-        checkedOut: true,
-        checkOutTime: new Date().toLocaleTimeString(),
-      }))
-
-      // Refresh the attendance list
-      const updated = await hrService.attendance()
-      setAttendanceList(updated)
-
-      setTimeout(() => setSuccessMessage(null), 3000)
+      clearBannerSoon({ tone: 'success', message: 'Check-out successful.' })
+      await refreshAttendance(true)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Check-out failed')
+      setBanner({ tone: 'danger', message: err instanceof Error ? err.message : 'Check-out failed' })
     } finally {
       setActionLoading(false)
     }
   }
 
   const handleScanQr = async (): Promise<void> => {
-    if (!qrInput.trim()) {
-      setError('Please enter or scan a QR code.')
-      return
-    }
-
-    if (qrInput.trim() === qrToken?.qrToken) {
-      await handleCheckIn()
-    } else {
-      setError('Invalid QR token. Please scan again.')
-    }
+    await handleCheckIn()
   }
+
+  const todayBadgeTone = !todayStatus.checkedIn ? 'danger' : todayStatus.checkedOut ? 'primary' : 'success'
+  const latenessTone = todayStatus.status?.toLowerCase() === 'late' ? 'warning' : 'success'
 
   return (
     <div className="page-stack">
+      <FullPageLoader show={loading} message="Loading attendance..." />
       <div className="page-heading">
         <div>
           <p className="eyebrow">Attendance</p>
-          <h2>Check-in & History</h2>
+          <h2>Attendance dashboard</h2>
+          <p className="muted">Generate a QR, confirm attendance, and review your latest activity in one place.</p>
         </div>
       </div>
 
-      {error && (
-        <div className="alert alert-error">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
+      {banner && <div className={`alert alert-${banner.tone}`}>{banner.message}</div>}
 
-      {successMessage && (
-        <div className="alert alert-success">
-          {successMessage}
-        </div>
-      )}
-
-      {/* Today's Status Card */}
-      <div className="grid grid-2">
-        <AttendanceCard
-          checkedIn={todayStatus.checkedIn}
-          checkedOut={todayStatus.checkedOut}
-          checkInTime={todayStatus.checkInTime}
-          checkOutTime={todayStatus.checkOutTime}
-          status={todayStatus.status}
-          loading={loading}
-        />
-
-        {/* QR Token Display Card */}
-        <Card>
-          <p className="card-label">QR Token</p>
-          <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#f3f4f6', borderRadius: '8px', fontFamily: 'monospace', fontSize: '0.85rem', wordBreak: 'break-all', minHeight: '60px', display: 'flex', alignItems: 'center' }}>
-            {loading ? 'Loading token…' : qrToken?.qrToken || 'No token available'}
+      <section className="grid grid-2 attendance-top-grid">
+        <Card className={`attendance-status-card attendance-status-${todayBadgeTone}`}>
+          <div className="section-header">
+            <div>
+              <p className="eyebrow">Today status</p>
+              <h3>{todayStatus.dateLabel || formatDate(todayKey)}</h3>
+            </div>
+            <div className="attendance-badge-row">
+              <Badge tone={todayBadgeTone}>{!todayStatus.checkedIn ? 'Not Checked In' : todayStatus.checkedOut ? 'Checked Out' : 'Checked In'}</Badge>
+              <Badge tone={latenessTone}>{todayStatus.status?.toLowerCase() === 'late' ? 'Late' : 'On Time'}</Badge>
+            </div>
           </div>
-          {qrToken && (
-            <p className="muted" style={{ fontSize: '0.85rem', marginTop: '8px' }}>
-              Expires in {qrToken.expiresIn} seconds
-            </p>
-          )}
+
+          <div className="attendance-status-grid">
+            <div>
+              <span className="attendance-stat-label">Clock In</span>
+              <strong className="attendance-stat-value">{todayStatus.checkInTime || '—'}</strong>
+            </div>
+            <div>
+              <span className="attendance-stat-label">Clock Out</span>
+              <strong className="attendance-stat-value">{todayStatus.checkOutTime || '—'}</strong>
+            </div>
+            <div>
+              <span className="attendance-stat-label">Status</span>
+              <strong className="attendance-stat-value">{!todayStatus.checkedIn ? 'Not Checked In' : todayStatus.checkedOut ? 'Checked Out' : 'Checked In'}</strong>
+            </div>
+          </div>
         </Card>
-      </div>
 
-      {/* Check-in/Check-out Actions */}
-      <Card>
-        <p className="card-label">Actions</p>
-
-        {/* QR Scan Input */}
-        <div style={{ marginTop: '16px' }}>
-          <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '6px', fontWeight: 500 }}>
-            Scan QR Code or Enter Token:
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
-            <input
-              ref={qrInputRef}
-              type="text"
-              placeholder="Scan QR code here"
-              value={qrInput}
-              onChange={(e) => setQrInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  void handleScanQr()
-                }
-              }}
-              disabled={actionLoading}
-              style={{
-                padding: '10px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: '6px',
-                fontSize: '0.95rem',
-                fontFamily: 'monospace',
-              }}
-            />
-            <Button
-              variant="primary"
-              onClick={handleScanQr}
-              disabled={actionLoading || !qrInput.trim()}
-              style={{ minWidth: '100px' }}
-            >
-              {actionLoading ? 'Processing…' : 'Verify'}
+        <Card className="attendance-qr-card">
+          <div className="section-header">
+            <div>
+              <p className="eyebrow">QR attendance</p>
+              <h3>Generate and confirm check-in</h3>
+            </div>
+            <Button type="button" variant="ghost" onClick={() => void generateQr()} disabled={qrLoading || actionLoading}>
+              {qrLoading ? 'Generating...' : qrToken ? 'Regenerate QR' : 'Generate QR'}
             </Button>
           </div>
-        </div>
 
-        {/* Check-in/Check-out Buttons */}
-        <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <Button
-            variant="primary"
-            onClick={handleCheckIn}
-            disabled={actionLoading || todayStatus.checkedIn || loading}
-            style={{
-              background: !todayStatus.checkedIn ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(0,0,0,0.1)',
-            }}
-          >
-            {actionLoading ? 'Processing…' : 'Check In'}
-          </Button>
+          <div className="attendance-qr-stage">
+            {qrToken ? (
+              <div className="attendance-qr-fade">
+                <div className="attendance-qr-shell">
+                  <QRCodeSVG value={qrToken.qrToken} size={168} level="M" includeMargin className="attendance-qr-code" />
+                </div>
+                <p className="attendance-countdown">Expires in {countdown}s</p>
+                <p className="muted attendance-qr-helper">Use the QR above, then confirm to check in.</p>
+              </div>
+            ) : (
+              <div className="attendance-empty-qr">
+                <p className="empty-state">Generate a QR code to start your attendance check-in.</p>
+              </div>
+            )}
+          </div>
 
-          <Button
-            variant="primary"
-            onClick={handleCheckOut}
-            disabled={actionLoading || !todayStatus.checkedIn || todayStatus.checkedOut || loading}
-            style={{
-              background: todayStatus.checkedIn && !todayStatus.checkedOut ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(0,0,0,0.1)',
-            }}
-          >
-            {actionLoading ? 'Processing…' : 'Check Out'}
-          </Button>
-        </div>
-      </Card>
+          <div className="attendance-action-row">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => void handleScanQr()}
+              disabled={actionLoading || qrLoading || !qrToken || qrExpired || todayStatus.checkedOut}
+              fullWidth
+            >
+              {actionLoading ? 'Confirming...' : 'Scan / Confirm Check-in'}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void generateQr()}
+              disabled={qrLoading || actionLoading}
+              fullWidth
+            >
+              {qrToken ? 'Refresh QR' : 'Generate QR'}
+            </Button>
+          </div>
 
-      {/* Attendance History */}
-      <div>
-        <div className="page-heading" style={{ marginBottom: '12px' }}>
+          <div className="attendance-action-row attendance-followup-row">
+            {todayStatus.checkedIn && !todayStatus.checkedOut ? (
+              <Button type="button" variant="primary" onClick={() => void handleCheckOut()} disabled={actionLoading || loading} fullWidth>
+                {actionLoading ? 'Processing...' : 'Check Out'}
+              </Button>
+            ) : (
+              <Button type="button" variant="ghost" onClick={() => void generateQr()} disabled={qrLoading || actionLoading || loading} fullWidth>
+                {todayStatus.checkedOut ? 'Attendance completed' : 'Check In'}
+              </Button>
+            )}
+          </div>
+        </Card>
+      </section>
+
+      <Card>
+        <div className="section-header">
           <div>
-            <p className="eyebrow">History</p>
-            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>Attendance Records</h3>
+            <p className="eyebrow">Attendance history</p>
+            <h3>Attendance records</h3>
           </div>
         </div>
-        <Card>
-          <AttendanceTable items={attendanceList} loading={loading} />
-        </Card>
-      </div>
+        <AttendanceTable items={attendanceList} loading={historyLoading} />
+      </Card>
     </div>
   )
 }

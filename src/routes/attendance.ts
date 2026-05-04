@@ -53,6 +53,13 @@ router.get(
 );
 
 router.get(
+  '/history',
+  jwtAuth,
+  requireRoles('staff', 'manager', 'admin'),
+  (req: AuthRequest, res: Response, next: NextFunction) => getOwnAttendanceHistory(req, res, next)
+);
+
+router.get(
   '/team',
   jwtAuth,
   requireRoles('manager', 'admin'),

@@ -77,7 +77,8 @@ export interface CheckInResponse {
 }
 
 export const hrService = {
-  attendance: () => getData<AttendanceItem[]>('/attendance/me'),
+  attendance: () => getData<AttendanceItem[]>('/attendance/history'),
+  attendanceHistory: () => getData<AttendanceItem[]>('/attendance/history'),
   leaves: () => getData<LeaveItem[]>('/leaves/me'),
   createLeave: (data: CreateLeaveRequestInput) => postData<LeaveItem>('/leaves', data),
   reimbursements: () => getData<ReimbursementItem[]>('/reimbursements/me'),

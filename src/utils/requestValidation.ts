@@ -100,8 +100,8 @@ export const leaveRequestSchema = z
   });
 
 export const reimbursementSubmitSchema = z.object({
-  title: z.string().trim().min(1, 'Title wajib diisi'),
-  description: z.string().trim().optional(),
+  title: z.string().trim().min(1, 'Title wajib diisi').optional(),
+  description: z.string().trim().min(1, 'Description wajib diisi'),
   amount: z.coerce.number().positive('Amount harus lebih besar dari 0'),
   attachmentUrl: z.string().trim().optional(),
 });

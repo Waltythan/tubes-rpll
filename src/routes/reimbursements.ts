@@ -12,7 +12,7 @@ router.use(jwtAuth);
 router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const payload = parseWithSchema(reimbursementSubmitSchema, {
-      title: req.body?.title,
+      title: typeof req.body?.title === 'string' ? req.body.title : undefined,
       description: typeof req.body?.description === 'string' ? req.body.description : undefined,
       amount: req.body?.amount,
       attachmentUrl: typeof req.body?.attachmentUrl === 'string' ? req.body.attachmentUrl : undefined,
@@ -20,7 +20,7 @@ router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequ
 
     const created = await reimbursementService.submit({
       userId: parseWithSchema(positiveIntSchema, req.user!.id),
-      title: payload.title,
+      title: payload.title || payload.description.slice(0, 80) || 'Reimbursement request',
       description: payload.description,
       amount: payload.amount,
       attachmentUrl: payload.attachmentUrl,

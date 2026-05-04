@@ -1,30 +1,61 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Card from '../components/Card'
+import Button from '../components/common/Button'
+import StatusBadge from '../components/common/StatusBadge'
+import ReimbursementForm from '../components/reimbursement/ReimbursementForm'
 import { useLoading } from '../hooks/useLoading'
 import { hrService, type ReimbursementItem } from '../services/hrService'
 
 export default function Reimbursement(): JSX.Element {
   const [items, setItems] = useState<ReimbursementItem[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [isFormOpen, setIsFormOpen] = useState(false)
   const { withLoading } = useLoading()
+  const isMountedRef = useRef(true)
+
+  useEffect(() => () => {
+    isMountedRef.current = false
+  }, [])
+
+  async function refreshReimbursements(): Promise<void> {
+    try {
+      const data = await withLoading(() => hrService.reimbursements())
+      if (!isMountedRef.current) return
+
+      setItems(data)
+      setError(null)
+    } catch (err: unknown) {
+      if (!isMountedRef.current) return
+
+      setError(err instanceof Error ? err.message : 'Failed to load reimbursements')
+    }
+  }
 
   useEffect(() => {
-    let active = true
-
-    async function load(): Promise<void> {
-      try {
-        const data = await withLoading(() => hrService.reimbursements())
-        if (active) setItems(data)
-      } catch (err: unknown) {
-        if (active) setError(err instanceof Error ? err.message : 'Failed to load reimbursements')
-      }
-    }
-
-    void load()
-    return () => {
-      active = false
-    }
+    void refreshReimbursements()
   }, [])
+
+  async function handleReimbursementCreated(createdReimbursement: ReimbursementItem): Promise<void> {
+    setItems((current) => [createdReimbursement, ...current.filter((item) => item.id !== createdReimbursement.id)])
+    await refreshReimbursements()
+  }
+
+  function formatAmount(value: number | string | undefined): string {
+    if (value === undefined || value === null || value === '') {
+      return '-'
+    }
+
+    const amount = typeof value === 'number' ? value : Number(value)
+    if (Number.isNaN(amount)) {
+      return String(value)
+    }
+
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
 
   return (
     <div className="page-stack">
@@ -33,16 +64,32 @@ export default function Reimbursement(): JSX.Element {
           <p className="eyebrow">Reimbursement</p>
           <h2>Expense claims</h2>
         </div>
+        <Button type="button" onClick={() => setIsFormOpen((current) => !current)}>
+          {isFormOpen ? 'Hide request form' : 'Request Reimbursement'}
+        </Button>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 
+      {isFormOpen && (
+        <Card>
+          <ReimbursementForm onSubmitted={handleReimbursementCreated} onClose={() => setIsFormOpen(false)} />
+        </Card>
+      )}
+
       <div className="grid grid-3">
         {items.length > 0 ? items.map((item) => (
           <Card key={item.id}>
-            <p className="card-title">{item.title || 'Expense'} #{item.id}</p>
-            <p className="card-value">{item.status || 'pending'}</p>
-            <p className="muted">Amount: {item.amount ?? '-'}</p>
+            <div className="section-header">
+              <div className="leave-card-header">
+                <div>
+                  <p className="card-title">{item.title || 'Expense'} #{item.id}</p>
+                  <p className="muted">{item.description || 'No description provided'}</p>
+                  <p className="card-value">{formatAmount(item.amount)}</p>
+                </div>
+                <StatusBadge status={item.status || 'pending'} />
+              </div>
+            </div>
           </Card>
         )) : (
           <Card>

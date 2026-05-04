@@ -227,6 +227,22 @@ a { color: inherit; }
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 .input:disabled { background: #f8fafc; color: #64748b; cursor: not-allowed; }
+.textarea { min-height: 120px; resize: vertical; }
+.input-error { border-color: rgba(220, 38, 38, 0.65); }
+.input-error:focus { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12); }
+
+.field-error {
+  color: var(--error);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.leave-card-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
 
 .btn {
   display: inline-flex;

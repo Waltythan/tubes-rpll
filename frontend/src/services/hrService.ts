@@ -24,6 +24,12 @@ export interface LeaveItem {
   createdAt?: string
 }
 
+export interface CreateLeaveRequestInput {
+  startDate: string
+  endDate: string
+  reason: string
+}
+
 export interface ReimbursementItem {
   id: number
   title?: string
@@ -67,6 +73,7 @@ export interface CheckInResponse {
 export const hrService = {
   attendance: () => getData<AttendanceItem[]>('/attendance/me'),
   leaves: () => getData<LeaveItem[]>('/leaves/me'),
+  createLeave: (data: CreateLeaveRequestInput) => postData<LeaveItem>('/leaves', data),
   reimbursements: () => getData<ReimbursementItem[]>('/reimbursements/me'),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
   

@@ -7,7 +7,7 @@ import { loginSchema, parseWithSchema, forgotPasswordSchema, resetPasswordSchema
 
 const router = express.Router();
 
-router.post('/login', loginRateLimit, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = parseWithSchema(loginSchema, {
       email: req.body?.email,

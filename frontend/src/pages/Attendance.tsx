@@ -88,7 +88,7 @@ export default function Attendance(): JSX.Element {
         }
       } catch (err: unknown) {
         if (active) {
-          console.error('Failed to generate QR token:', err)
+          setError(err instanceof Error ? err.message : 'Failed to generate QR token')
         }
       }
     }

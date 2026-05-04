@@ -26,6 +26,7 @@ app.use(cors({
     'http://localhost',      // Origin dari error kamu
     'http://localhost:80',   // Origin alternatif
     'http://localhost:3000', // Jika kamu pakai React dev server (Vite/CRA)
+    'http://localhost:5173', // Jika kamu pakai Vite default dev server
     'http://127.0.0.1'       // Untuk jaga-jaga
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

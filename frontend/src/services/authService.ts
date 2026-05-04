@@ -1,0 +1,38 @@
+import api from './api'
+
+export interface AuthUser {
+  id: number
+  email: string
+  name?: string | null
+  fullName?: string | null
+  full_name?: string | null
+  role?: string | null
+  roles?: string | null
+  [key: string]: unknown
+}
+
+export interface LoginPayload {
+  email: string
+  password: string
+}
+
+export interface LoginResult {
+  accessToken: string
+  user: AuthUser
+}
+
+interface BackendResponse<T> {
+  status: string
+  message: string
+  data: T
+}
+
+export async function login(payload: LoginPayload): Promise<LoginResult> {
+  const response = await api.post<BackendResponse<LoginResult>>('/auth/login', payload)
+  return response.data.data
+}
+
+export function logout(): void {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+}

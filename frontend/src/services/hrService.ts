@@ -17,10 +17,13 @@ export interface AttendanceItem {
 
 export interface LeaveItem {
   id: number
+  user_id?: number
+  approved_by?: number | null
   type?: string
   status?: string
   start_date?: string
   end_date?: string
+  attachment_url?: string
   createdAt?: string
 }
 
@@ -32,10 +35,14 @@ export interface CreateLeaveRequestInput {
 
 export interface ReimbursementItem {
   id: number
+  user_id?: number
+  approved_by?: number | null
+  payroll_id?: number | null
   title?: string
   description?: string
   amount?: number | string
   status?: string
+  attachment_url?: string
   request_date?: string
 }
 
@@ -62,6 +69,11 @@ async function postData<T>(path: string, data?: Record<string, unknown>): Promis
   return response.data.data
 }
 
+async function patchData<T>(path: string, data?: Record<string, unknown>): Promise<T> {
+  const response = await api.patch<BackendResponse<T>>(path, data || {})
+  return response.data.data
+}
+
 export interface QrTokenResponse {
   qrToken: string
   expiresIn: number
@@ -80,9 +92,13 @@ export const hrService = {
   attendance: () => getData<AttendanceItem[]>('/attendance/history'),
   attendanceHistory: () => getData<AttendanceItem[]>('/attendance/history'),
   leaves: () => getData<LeaveItem[]>('/leaves/me'),
+  teamLeaves: () => getData<LeaveItem[]>('/leaves/team'),
   createLeave: (data: CreateLeaveRequestInput) => postData<LeaveItem>('/leaves', data),
+  decideLeave: (leaveId: number, decision: 'approved' | 'declined') => patchData<LeaveItem>(`/leaves/${leaveId}/decision`, { decision }),
   reimbursements: () => getData<ReimbursementItem[]>('/reimbursements/me'),
+  teamReimbursements: () => getData<ReimbursementItem[]>('/reimbursements/team'),
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
+  decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
   
   // Attendance actions

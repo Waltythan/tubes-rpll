@@ -94,7 +94,10 @@ a { color: inherit; }
 }
 .sidebar-link:hover { background: var(--primary-soft); color: var(--primary-strong); transform: translateX(2px); }
 .sidebar-link.active { background: linear-gradient(135deg, var(--primary), #60a5fa); color: #fff; box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18); }
+.sidebar-divider { height: 1px; margin: 8px 0; background: var(--border); }
+.sidebar-section-label { padding: 6px 12px 2px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .sidebar-footer { margin-top: auto; padding-top: 24px; display: grid; gap: 6px; }
+.sidebar-role { display: block; font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.7; text-transform: capitalize; }
 
 .app-main { min-width: 0; padding: 24px; }
 .topbar {
@@ -178,6 +181,17 @@ a { color: inherit; }
 .card-stat { margin: 10px 0 8px; font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; }
 .card-title { font-size: 0.95rem; font-weight: 700; color: var(--muted); }
 .card-value { margin: 8px 0; font-size: 1.1rem; font-weight: 700; }
+.approval-summary { min-width: 190px; }
+.approval-card-header { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.approval-meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.approval-meta-grid strong { display: block; margin-top: 4px; }
+.approval-description { margin-top: 14px; }
+.approval-link { display: inline-flex; margin-top: 10px; font-weight: 600; color: var(--primary-strong); text-decoration: none; }
+.approval-link:hover { text-decoration: underline; }
+.approval-actions { display: flex; gap: 12px; margin-top: 18px; }
+.approval-loading { display: grid; gap: 8px; }
+.pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.pagination-meta { display: flex; align-items: center; gap: 14px; }
 
 .attendance-top-grid { align-items: stretch; }
 .attendance-status-card {
@@ -549,6 +563,7 @@ a { color: inherit; }
   .grid-3,
   .attendance-status-grid,
   .attendance-action-row,
+  .approval-meta-grid,
   .table-skeleton-row { grid-template-columns: 1fr; }
 }
 
@@ -563,4 +578,7 @@ a { color: inherit; }
   .topbar-user { width: 100%; justify-content: space-between; flex-wrap: wrap; }
   .auth-shell { padding: 16px; }
   .topbar-left { width: 100%; justify-content: space-between; }
+  .approval-actions,
+  .pagination-bar { flex-direction: column; align-items: stretch; }
+  .pagination-meta { justify-content: space-between; }
 }

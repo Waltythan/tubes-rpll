@@ -8,6 +8,23 @@ import { parseWithSchema, profileUpdateSchema, positiveIntSchema } from '../util
 
 const router = express.Router();
 
+// Get own profile
+router.get('/me', jwtAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as any;
+    const user = authReq.user;
+    if (!user) throw new ApiError(401, 'Unauthorized');
+
+    const profile = await profileService.getByUserId(parseWithSchema(positiveIntSchema, user.id));
+    if (!profile) {
+      return sendResponse(res, 200, 'Profile not found', null);
+    }
+    sendResponse(res, 200, 'Profile retrieved', profile);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Update own profile (staff/manager/admin)
 router.patch('/me', jwtAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/common/Button'
-import Button from '../components/Button'
 import Card from '../components/Card'
 import ErrorAlert from '../components/common/ErrorAlert'
 import SkeletonLoader from '../components/common/SkeletonLoader'
@@ -43,7 +42,7 @@ export default function Profile(): JSX.Element {
       try {
         setLoading(true)
         setError(null)
-        const response = await api.get<{ data: { data: ProfileData } }>('/profiles/me')
+        const response = await api.get<{ data: ProfileData | null }>('/profiles/me')
         const profileData = response.data.data
 
         if (isMounted) {

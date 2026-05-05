@@ -2,27 +2,31 @@ import { useEffect, useRef, useState } from 'react'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
 import ErrorAlert from '../components/common/ErrorAlert'
+import SkeletonLoader from '../components/common/SkeletonLoader'
 import { showToast } from '../components/common/ToastContainer'
 import StatusBadge from '../components/common/StatusBadge'
 import ReimbursementForm from '../components/reimbursement/ReimbursementForm'
-import { useLoading } from '../hooks/useLoading'
 import { hrService, type ReimbursementItem } from '../services/hrService'
 
 export default function Reimbursement(): JSX.Element {
   const [items, setItems] = useState<ReimbursementItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const { withLoading } = useLoading()
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
   const isMountedRef = useRef(true)
 
-  useEffect(() => () => {
-    isMountedRef.current = false
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
   }, [])
 
   async function refreshReimbursements(): Promise<void> {
     try {
-      const data = await withLoading(() => hrService.reimbursements())
+      setLoading(true)
+      const data = await hrService.reimbursements()
       if (!isMountedRef.current) return
 
       setItems(data)
@@ -30,25 +34,35 @@ export default function Reimbursement(): JSX.Element {
     } catch (err: unknown) {
       if (!isMountedRef.current) return
 
-      setError(err instanceof Error ? err.message : 'Failed to load reimbursements')
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load reimbursement requests.'
+      setError(errorMsg)
+      showToast(errorMsg, 'error')
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }
 
   useEffect(() => {
-      setLoading(true)
     void refreshReimbursements()
   }, [])
 
   async function handleReimbursementCreated(createdReimbursement: ReimbursementItem): Promise<void> {
-    setItems((current) => [createdReimbursement, ...current.filter((item) => item.id !== createdReimbursement.id)])
-    await refreshReimbursements()
+    setSubmitting(true)
+    try {
+      setItems((current) => [createdReimbursement, ...current.filter((item) => item.id !== createdReimbursement.id)])
+      showToast('Reimbursement request created successfully!', 'success')
+      setIsFormOpen(false)
+      await refreshReimbursements()
+    } finally {
+      if (isMountedRef.current) {
+        setSubmitting(false)
+      }
+    }
   }
 
-      const errorMsg = err instanceof Error ? err.message : 'Failed to load reimbursements'
-      setError(errorMsg)
-      showToast(errorMsg, 'error')
-    } finally {
-      setLoading(false)
+  function formatAmount(value: number | string | undefined): string {
     if (value === undefined || value === null || value === '') {
       return '-'
     }
@@ -58,7 +72,6 @@ export default function Reimbursement(): JSX.Element {
       return String(value)
     }
 
-    showToast('Reimbursement request created successfully!', 'success')
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -69,16 +82,16 @@ export default function Reimbursement(): JSX.Element {
   return (
     <div className="page-stack">
       <div className="page-heading">
-        <Button type="button" onClick={() => setIsFormOpen((current) => !current)} loading={loading}>
+        <div>
           <p className="eyebrow">Reimbursement</p>
           <h2>Expense claims</h2>
         </div>
-        <Button type="button" onClick={() => setIsFormOpen((current) => !current)}>
-      <ErrorAlert error={error} onDismiss={() => setError(null)} />
+        <Button type="button" onClick={() => setIsFormOpen((current) => !current)} loading={submitting}>
+          {isFormOpen ? 'Hide request form' : 'Request Reimbursement'}
         </Button>
       </div>
 
-      {error && <div className="alert alert-error">{error}</div>}
+      <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
       {isFormOpen && (
         <Card>
@@ -86,26 +99,34 @@ export default function Reimbursement(): JSX.Element {
         </Card>
       )}
 
-      <div className="grid grid-3">
-        {items.length > 0 ? items.map((item) => (
-          <Card key={item.id}>
-            <div className="section-header">
-              <div className="leave-card-header">
-                <div>
-                  <p className="card-title">{item.title || 'Expense'} #{item.id}</p>
-                  <p className="muted">{item.description || 'No description provided'}</p>
-                  <p className="card-value">{formatAmount(item.amount)}</p>
+      {loading ? (
+        <Card>
+          <SkeletonLoader lines={4} height={18} />
+        </Card>
+      ) : (
+        <div className="grid grid-3">
+          {items.length > 0 ? (
+            items.map((item) => (
+              <Card key={item.id}>
+                <div className="section-header">
+                  <div className="leave-card-header">
+                    <div>
+                      <p className="card-title">{item.title || 'Expense'} #{item.id}</p>
+                      <p className="muted">{item.description || 'No description provided'}</p>
+                      <p className="card-value">{formatAmount(item.amount)}</p>
+                    </div>
+                    <StatusBadge status={item.status || 'pending'} />
+                  </div>
                 </div>
-                <StatusBadge status={item.status || 'pending'} />
-              </div>
-            </div>
-          </Card>
-        )) : (
-          <Card>
-            <p className="empty-state">No reimbursement requests yet.</p>
-          </Card>
-        )}
-      </div>
+              </Card>
+            ))
+          ) : (
+            <Card>
+              <p className="empty-state">No reimbursement requests yet.</p>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   )
 }

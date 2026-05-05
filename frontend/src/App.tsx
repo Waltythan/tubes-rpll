@@ -18,9 +18,12 @@ export default function App(): JSX.Element {
   return (
     <>
       <Routes>
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* Protected routes - all users */}
         <Route
           element={
             <ProtectedRoute>
@@ -34,8 +37,20 @@ export default function App(): JSX.Element {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/leave" element={<Leave />} />
           <Route path="/reimbursement" element={<Reimbursement />} />
+        </Route>
+
+        {/* Protected routes - admin only */}
+        <Route
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/payroll" element={<Payroll />} />
         </Route>
+
+        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
       </Routes>
     </>

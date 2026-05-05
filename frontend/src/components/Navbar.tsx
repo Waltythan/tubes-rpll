@@ -10,6 +10,7 @@ interface NavbarProps {
 export default function Navbar({ onToggleSidebar, sidebarCollapsed }: NavbarProps): JSX.Element {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const isAdmin = (user?.role || user?.roles) === 'admin'
 
   function handleLogout(): void {
     logout()
@@ -24,14 +25,16 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }: NavbarProp
         </Button>
         <div>
           <p className="topbar-kicker">Mini HRIS</p>
-          <h1 className="topbar-title">Workforce dashboard</h1>
+          <h1 className="topbar-title">{isAdmin ? 'Admin Dashboard' : 'Workforce Dashboard'}</h1>
         </div>
       </div>
 
       <div className="topbar-user">
         <div className="topbar-user-meta">
           <span className="topbar-user-email">{user?.name || user?.fullName || user?.full_name || user?.email || 'Signed in'}</span>
-          <span className="badge badge-neutral">{user?.role || user?.roles || 'staff'}</span>
+          <span className={['badge', isAdmin ? 'badge-success' : 'badge-neutral'].join(' ')}>
+            {isAdmin ? 'Admin' : 'Staff'}
+          </span>
         </div>
         <Button type="button" variant="ghost" onClick={handleLogout}>Logout</Button>
       </div>

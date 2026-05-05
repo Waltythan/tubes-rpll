@@ -141,4 +141,18 @@ export const hrService = {
   getQrToken: () => getData<QrTokenResponse>('/attendance/qr'),
   checkIn: (qrToken: string) => postData<CheckInResponse>('/attendance/check-in', { qrToken }),
   checkOut: () => postData<CheckInResponse>('/attendance/check-out', {}),
+
+  // Team attendance (for managers)
+  getTeamAttendance: (params?: { start_date?: string; end_date?: string; employee_name?: string }): Promise<AttendanceItem[]> => {
+    const queryParams = new URLSearchParams()
+    if (params?.start_date) queryParams.append('start_date', params.start_date)
+    if (params?.end_date) queryParams.append('end_date', params.end_date)
+    if (params?.employee_name) queryParams.append('employee_name', params.employee_name)
+    const query = queryParams.toString()
+    const path = query ? `/attendance/team?${query}` : '/attendance/team'
+    return getData<AttendanceItem[]>(path)
+  },
+
+  // Admin: Update attendance record
+  updateAttendance: (attendanceId: number, data: Record<string, unknown>) => patchData<AttendanceItem>(`/attendance/${attendanceId}`, data),
 }

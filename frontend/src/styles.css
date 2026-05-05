@@ -398,6 +398,8 @@ a { color: inherit; }
 }
 .btn:hover:not(:disabled) { transform: translateY(-1px); }
 .btn:disabled { cursor: not-allowed; opacity: 0.72; }
+.btn-small { min-height: 36px; padding: 0 12px; font-size: 0.9rem; }
+.btn-large { min-height: 48px; padding: 0 24px; font-size: 1.05rem; }
 .btn-primary { background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; box-shadow: 0 14px 24px rgba(37, 99, 235, 0.18); }
 .btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, var(--primary-strong), #2563eb); }
 .btn-secondary { background: #e2e8f0; color: #0f172a; }
@@ -588,4 +590,318 @@ a { color: inherit; }
   .approval-actions,
   .pagination-bar { flex-direction: column; align-items: stretch; }
   .pagination-meta { justify-content: space-between; }
+}
+
+/* Filter Styles */
+.filter-section {
+  display: grid;
+  gap: 16px;
+}
+
+.filter-section .card-title {
+  margin-bottom: 8px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.filter-group {
+  display: grid;
+  gap: 6px;
+}
+
+.filter-group .field-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.filter-input {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--panel);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.filter-input:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filter-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  transform: translate(-20%, -20%);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.stat-card-present::before { background: var(--success); }
+.stat-card-late::before { background: #f59e0b; }
+.stat-card-absent::before { background: var(--error); }
+.stat-card-total::before { background: var(--primary); }
+
+.stat-icon {
+  font-size: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card .card-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0;
+}
+
+.stat-card .card-stat {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* Table Styles */
+.table-card {
+  overflow: hidden;
+  padding: 0;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.attendance-table thead {
+  background: #f9fafb;
+  border-bottom: 2px solid var(--border);
+}
+
+.attendance-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.attendance-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 160ms ease;
+}
+
+.attendance-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.attendance-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.attendance-table tbody tr:nth-child(even):hover {
+  background-color: #f3f4f6;
+}
+
+.attendance-table td {
+  padding: 14px 16px;
+  color: var(--text);
+}
+
+.attendance-table .employee-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.attendance-table .time-cell {
+  font-variant-numeric: tabular-nums;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.92rem;
+}
+
+.attendance-table .badge {
+  display: inline-block;
+}
+
+@media (max-width: 720px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+
+  .attendance-table th,
+  .attendance-table td {
+    padding: 10px 12px;
+  }
+}
+
+/* Modal Styles */
+.edit-modal-card {
+  position: relative;
+}
+
+.edit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+  animation: fadeIn 160ms ease;
+}
+
+.edit-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(15, 23, 42, 0.15);
+  max-width: 500px;
+  width: calc(100% - 32px);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  z-index: 101;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.modal-close {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+  display: grid;
+  place-items: center;
+}
+
+.modal-close:hover {
+  background: #cbd5e1;
+}
+
+.edit-form {
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.form-group {
+  display: grid;
+  gap: 6px;
+}
+
+.form-group .field {
+  gap: 6px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.modal-actions .btn {
+  flex: 1;
+  max-width: 150px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 20px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }

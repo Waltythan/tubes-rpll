@@ -37,6 +37,7 @@ export default function Sidebar(_: SidebarProps): JSX.Element {
               Approvals
             </div>
             <NavLink to="/org-chart" className={navLinkClass}><span className="nav-icon">T</span><span className="nav-label">Management Tree</span></NavLink>
+            <NavLink to="/team-attendance" className={navLinkClass}><span className="nav-icon">A</span><span className="nav-label">Team Attendance</span></NavLink>
             <NavLink to="/approvals/leaves" className={navLinkClass}><span className="nav-icon">L</span><span className="nav-label">Leave Approvals</span></NavLink>
             <NavLink to="/approvals/reimbursements" className={navLinkClass}><span className="nav-icon">E</span><span className="nav-label">Reimbursement Approvals</span></NavLink>
           </>
@@ -50,6 +51,7 @@ export default function Sidebar(_: SidebarProps): JSX.Element {
             </div>
             <NavLink to="/payroll" className={navLinkClass}><span className="nav-icon">$</span><span className="nav-label">Payroll</span></NavLink>
             <NavLink to="/users" className={navLinkClass}><span className="nav-icon">U</span><span className="nav-label">Users</span></NavLink>
+            <NavLink to="/admin/attendance" className={navLinkClass}><span className="nav-icon">📝</span><span className="nav-label">Attendance</span></NavLink>
             <NavLink to="/activity-logs" className={navLinkClass}><span className="nav-icon">L</span><span className="nav-label">Activity Logs</span></NavLink>
           </>
         )}

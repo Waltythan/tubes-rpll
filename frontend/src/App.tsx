@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import Attendance from './pages/Attendance'
 import ActivityLogs from './pages/ActivityLogs'
+import AdminAttendance from './pages/AdminAttendance'
 import Dashboard from './pages/Dashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import Leave from './pages/Leave'
@@ -16,6 +17,7 @@ import Profile from './pages/Profile'
 import Reimbursement from './pages/Reimbursement'
 import ReimbursementApprovals from './pages/ReimbursementApprovals'
 import ResetPassword from './pages/ResetPassword'
+import TeamAttendance from './pages/TeamAttendance'
 import Users from './pages/Users'
 
 export default function App(): JSX.Element {
@@ -45,6 +47,7 @@ export default function App(): JSX.Element {
           <Route path="/leave" element={<Leave />} />
           <Route path="/reimbursement" element={<Reimbursement />} />
           <Route path="/org-chart" element={<ProtectedRoute allowedRoles={['manager', 'admin']}><OrgChart /></ProtectedRoute>} />
+          <Route path="/team-attendance" element={<ProtectedRoute allowedRoles={['manager', 'admin']}><TeamAttendance /></ProtectedRoute>} />
           <Route path="/approvals/leaves" element={<ProtectedRoute allowedRoles={['manager', 'admin']}><LeaveApprovals /></ProtectedRoute>} />
           <Route path="/approvals/reimbursements" element={<ProtectedRoute allowedRoles={['manager', 'admin']}><ReimbursementApprovals /></ProtectedRoute>} />
         </Route>
@@ -60,6 +63,7 @@ export default function App(): JSX.Element {
           <Route path="/payroll" element={<Payroll />} />
           <Route path="/users" element={<Users />} />
           <Route path="/activity-logs" element={<ActivityLogs />} />
+          <Route path="/admin/attendance" element={<AdminAttendance />} />
         </Route>
 
         {/* Catch-all redirect */}

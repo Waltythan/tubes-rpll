@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Card from '../components/Card'
+import EmptyState from '../components/common/EmptyState'
 import { useLoading } from '../hooks/useLoading'
 import { hrService, type PayrollItem } from '../services/hrService'
 
@@ -47,7 +48,7 @@ export default function Payroll(): JSX.Element {
           </Card>
         )) : (
           <Card>
-            <p className="empty-state">No payroll data available.</p>
+            <EmptyState />
           </Card>
         )}
       </div>

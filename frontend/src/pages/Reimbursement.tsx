@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
+import EmptyState from '../components/common/EmptyState'
 import ErrorAlert from '../components/common/ErrorAlert'
 import SkeletonLoader from '../components/common/SkeletonLoader'
 import { showToast } from '../components/common/ToastContainer'
@@ -122,7 +123,7 @@ export default function Reimbursement(): JSX.Element {
             ))
           ) : (
             <Card>
-              <p className="empty-state">No reimbursement requests yet.</p>
+              <EmptyState />
             </Card>
           )}
         </div>

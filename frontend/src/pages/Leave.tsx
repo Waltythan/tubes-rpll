@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
+import EmptyState from '../components/common/EmptyState'
 import ErrorAlert from '../components/common/ErrorAlert'
 import { showToast } from '../components/common/ToastContainer'
 import StatusBadge from '../components/common/StatusBadge'
@@ -84,7 +85,7 @@ export default function Leave(): JSX.Element {
           </Card>
         )) : (
           <Card>
-            <p className="empty-state">No leave requests yet.</p>
+            <EmptyState />
           </Card>
         )}
       </div>

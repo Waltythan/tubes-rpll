@@ -1,4 +1,5 @@
 import type { AttendanceItem } from '../../services/hrService'
+import EmptyState from '../common/EmptyState'
 import StatusBadge from '../common/StatusBadge'
 
 interface AttendanceTableProps {
@@ -53,7 +54,7 @@ export default function AttendanceTable({ items, loading }: AttendanceTableProps
   if (!items || items.length === 0) {
     return (
       <div className="table-container">
-        <div className="table-empty">No attendance yet.</div>
+        <EmptyState title="No data yet" description="Attendance records will appear here once they are available." />
       </div>
     )
   }

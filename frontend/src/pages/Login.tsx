@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import Button from '../components/Button'
-import Card from '../components/Card'
+import AuthLayout from '../components/AuthLayout'
 import Input from '../components/Input'
+import Button from '../components/common/Button'
 import { useAuth } from '../hooks/useAuth'
 import { useLoading } from '../hooks/useLoading'
 
@@ -30,38 +30,24 @@ export default function Login(): JSX.Element {
   }
 
   return (
-    <div className="auth-shell">
-      <div className="auth-panel">
-        <div className="auth-hero card-surface">
-          <p className="eyebrow">Mini HRIS</p>
-          <h1>Welcome back</h1>
-          <p className="muted">Sign in to manage attendance, leave, reimbursements, and payroll from one dashboard.</p>
+    <AuthLayout
+      heading="Welcome back"
+      description="Sign in to manage attendance, leave, reimbursements, and payroll from one dashboard."
+    >
+      <form className="form-grid" onSubmit={submit}>
+        <Input label="Email" type="email" placeholder="name@company.com" value={email} onChange={(event) => setEmail(event.target.value)} disabled={isLoading} />
+        <Input label="Password" type="password" placeholder="Enter your password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={isLoading} />
+
+        <div className="auth-links">
+          <Link to="/forgot-password">Forgot Password?</Link>
         </div>
 
-        <Card className="auth-card">
-          <div className="page-heading compact">
-            <div>
-              <p className="eyebrow">Secure access</p>
-              <h2>Login</h2>
-            </div>
-          </div>
+        {error && <div className="alert alert-error">{error}</div>}
 
-          <form className="form-grid" onSubmit={submit}>
-            <Input label="Email" type="email" placeholder="name@company.com" value={email} onChange={(event) => setEmail(event.target.value)} disabled={isLoading} />
-            <Input label="Password" type="password" placeholder="Enter your password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={isLoading} />
-
-            <div className="auth-links">
-              <Link to="/forgot-password">Forgot Password?</Link>
-            </div>
-
-            {error && <div className="alert alert-error">{error}</div>}
-
-            <Button type="submit" variant="primary" fullWidth disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Login'}
-            </Button>
-          </form>
-        </Card>
-      </div>
-    </div>
+        <Button type="submit" variant="primary" fullWidth loading={isLoading} disabled={isLoading}>
+          Login
+        </Button>
+      </form>
+    </AuthLayout>
   )
 }

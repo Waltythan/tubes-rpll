@@ -76,6 +76,19 @@ export interface CheckInResponse {
   status?: string
 }
 
+export interface ActivityLog {
+  user_id?: number
+  action?: string
+  target_table?: string
+  target_id?: string
+  ip_address?: string
+  created_at?: string
+}
+
+export interface ActivityLogsResponse {
+  rows: ActivityLog[]
+}
+
 export const hrService = {
   attendance: () => getData<AttendanceItem[]>('/attendance/history'),
   attendanceHistory: () => getData<AttendanceItem[]>('/attendance/history'),
@@ -84,6 +97,7 @@ export const hrService = {
   reimbursements: () => getData<ReimbursementItem[]>('/reimbursements/me'),
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
+  activityLogs: (limit?: number, offset?: number) => getData<ActivityLogsResponse>(`/activity-logs?limit=${limit || 50}&offset=${offset || 0}`),
   
   // Attendance actions
   getQrToken: () => getData<QrTokenResponse>('/attendance/qr'),

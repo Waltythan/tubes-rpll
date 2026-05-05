@@ -12,6 +12,8 @@ import Payroll from './pages/Payroll'
 import Profile from './pages/Profile'
 import Reimbursement from './pages/Reimbursement'
 import ResetPassword from './pages/ResetPassword'
+import ActivityLogs from './pages/ActivityLogs'
+import Users from './pages/Users'
 
 export default function App(): JSX.Element {
   const { isAuthenticated } = useAuth()
@@ -50,6 +52,8 @@ export default function App(): JSX.Element {
           }
         >
           <Route path="/payroll" element={<Payroll />} />
+          <Route path="/activity-logs" element={<ActivityLogs />} />
+          <Route path="/users" element={<Users />} />
         </Route>
 
         {/* Catch-all redirect */}

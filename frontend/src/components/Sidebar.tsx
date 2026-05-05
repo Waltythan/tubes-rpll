@@ -1,15 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
-interface SidebarProps {
-  collapsed: boolean
-  onToggle: () => void
-}
+interface SidebarProps {}
 
-const navLinkClass = ({ isActive }: { isActive: boolean }): string =>
-  ['sidebar-link', isActive ? 'active' : ''].join(' ')
+const navLinkClass = ({ isActive }: { isActive: boolean }): string => ['sidebar-link', isActive ? 'active' : ''].join(' ')
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps): JSX.Element {
+export default function Sidebar(_: SidebarProps): JSX.Element {
   const { user } = useAuth()
   const role = (user?.role || user?.roles || 'staff') as 'admin' | 'manager' | 'staff'
   const isAdmin = role === 'admin'
@@ -17,16 +13,14 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): JSX.Elem
   const roleLabel = role === 'admin' ? 'Administrator' : role === 'manager' ? 'Manager' : 'Staff'
 
   return (
-    <aside className={['sidebar card-surface', collapsed ? 'is-collapsed' : ''].join(' ').trim()}>
+    <aside className="sidebar card-surface">
       <div className="sidebar-brand">
         <div className="brand-mark">HR</div>
         <div className="sidebar-brand-copy">
           <p className="sidebar-brand-name">Mini HRIS</p>
           <p className="sidebar-brand-subtitle">Operations console</p>
         </div>
-        <button type="button" className="sidebar-collapse-btn" onClick={onToggle} aria-label="Toggle sidebar">
-          {collapsed ? '›' : '‹'}
-        </button>
+        {/* collapse control removed - sidebar is always expanded */}
       </div>
 
       <nav className="sidebar-nav">
@@ -54,6 +48,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): JSX.Elem
               Admin
             </div>
             <NavLink to="/payroll" className={navLinkClass}><span className="nav-icon">$</span><span className="nav-label">Payroll</span></NavLink>
+            <NavLink to="/users" className={navLinkClass}><span className="nav-icon">U</span><span className="nav-label">Users</span></NavLink>
             <NavLink to="/activity-logs" className={navLinkClass}><span className="nav-icon">L</span><span className="nav-label">Activity Logs</span></NavLink>
           </>
         )}

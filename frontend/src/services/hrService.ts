@@ -102,6 +102,15 @@ export const hrService = {
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
+
+  // Admin user management
+  getUsers: () => getData<any[]>('/users'),
+  createUser: (data: Record<string, unknown>) => postData<any>('/users', data),
+  updateUser: (userId: number, data: Record<string, unknown>) => patchData<any>(`/users/${userId}`, data),
+  deleteUser: async (userId: number) => {
+    const response = await api.delete(`/users/${userId}`)
+    return response.data.data
+  },
   
   // Attendance actions
   getQrToken: () => getData<QrTokenResponse>('/attendance/qr'),

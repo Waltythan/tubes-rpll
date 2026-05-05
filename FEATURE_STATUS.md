@@ -82,6 +82,30 @@
 - **Status:** ✅ COMPLETE
 - **Demo:** Safe
 
+### List Users
+- **Backend API:** ✅ `GET /users`
+- **Frontend UI:** ✅ Admin users page (list, create, edit, delete)
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe — Admins can manage users via the UI
+
+### Create User
+- **Backend API:** ✅ `POST /users`
+- **Frontend UI:** ✅ In-page create form available to Admins
+- **Status:** ✅ COMPLETE
+- **Note:** Ensure required fields (department/baseSalary) are provided per backend validation
+
+### Update User
+- **Backend API:** ✅ `PATCH /users/:userId`
+- **Frontend UI:** ✅ Edit user form in Admin users page
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe
+
+### Delete User
+- **Backend API:** ✅ `DELETE /users/:userId`
+- **Frontend UI:** ✅ Delete action available in Admin users page
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe
+
 ---
 
 ## 3. ATTENDANCE (6/6 features)

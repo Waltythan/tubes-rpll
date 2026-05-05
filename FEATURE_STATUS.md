@@ -161,8 +161,8 @@
 
 ### Generate Payroll
 - **Backend API:** ✅ `POST /payroll/generate`
-- **Frontend UI:** ❌ No generation UI
-- **Status:** ⚠️ PARTIAL
+- **Frontend UI:** ✅ Admin payroll generation form
+- **Status:** ✅ COMPLETE
 
 ### Add Adjustments
 - **Backend API:** ✅ `POST /payroll/:payrollId/items`
@@ -208,8 +208,8 @@
 
 ### Admin Role
 - **Can:** Create/delete users, view logs, access payroll, manage profiles via API
-- **Frontend Support:** ✅ User management and activity logs UIs implemented
-- **Status:** ⚠️ PARTIAL (payroll/admin profile UI still missing)
+- **Frontend Support:** ✅ User management, activity logs, and payroll generation UIs implemented
+- **Status:** ⚠️ PARTIAL (admin profile UI still missing)
 
 ### Manager Role
 - **Can:** View team leave/reimbursement, approve requests
@@ -261,7 +261,7 @@
 | View Team | ✅ | ✅ | ✅ | ✅ |
 | Approve/Reject | ✅ | ✅ | ✅ | ✅ |
 | **Payroll** ||||
-| Generate | ✅ | ❌ | ⚠️ | ❌ |
+| Generate | ✅ | ✅ | ✅ | ✅ |
 | Add Adjustment | ✅ | ❌ | ⚠️ | ❌ |
 | View Own | ✅ | ⚠️ | ⚠️ | ⚠️ |
 | **Profile** ||||
@@ -287,7 +287,7 @@
 | Payroll | 33% | ⚠️ Low | ❌ No |
 | Profile Management | 67% | ⚠️ Partial | ✅ Yes |
 | Activity Logs | 100% | ✅ Good | ✅ Yes |
-| **Overall** | **84%** | ✅ Good | ✅ Yes |
+| **Overall** | **85%** | ✅ Good | ✅ Yes |
 
 ---
 
@@ -295,9 +295,8 @@
 
 These endpoints still work via API but do not have a dedicated frontend screen:
 
-1. `POST /payroll/generate` - Generate payroll (admin)
-2. `POST /payroll/:payrollId/items` - Add payroll adjustment (admin)
-3. `PATCH /profiles/:userId` - Admin update profile
+1. `POST /payroll/:payrollId/items` - Add payroll adjustment (admin)
+2. `PATCH /profiles/:userId` - Admin update profile
 
 ---
 

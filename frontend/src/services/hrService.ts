@@ -63,6 +63,11 @@ export interface PayrollItem {
   status?: string
 }
 
+export interface GeneratePayrollInput {
+  month: number
+  year: number
+}
+
 export interface UserItem {
   id?: number
   user_id?: number
@@ -125,6 +130,7 @@ export const hrService = {
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
+  generatePayroll: ({ month, year }: GeneratePayrollInput) => postData<PayrollItem>('/payroll/generate', { month, year }),
 
   // Admin user management
   getUsers: () => getData<UserItem[]>('/users'),

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
+import Button from '../components/common/Button'
 import Button from '../components/Button'
 import Card from '../components/Card'
+import ErrorAlert from '../components/common/ErrorAlert'
+import SkeletonLoader from '../components/common/SkeletonLoader'
+import { showToast } from '../components/common/ToastContainer'
 import Input from '../components/Input'
 import { useAuth } from '../hooks/useAuth'
 import { useLoading } from '../hooks/useLoading'
@@ -88,7 +92,8 @@ export default function Profile(): JSX.Element {
         }
       } catch (e: unknown) {
         if (isMounted) {
-          setError(e instanceof Error ? e.message : 'Failed to load profile')
+          const errorMsg = e instanceof Error ? e.message : 'Failed to load profile'
+          setError(errorMsg)
           // Set fallback profile on error
           setProfile({
             full_name: user?.name || user?.fullName || user?.email || '',
@@ -128,6 +133,8 @@ export default function Profile(): JSX.Element {
       }
       await withLoading(() => api.patch('/profiles/me', payload))
       
+      showToast('Profile updated successfully!', 'success')
+      
       // Update user in auth context if name changed
       if (profile.full_name && profile.full_name !== initialProfile.full_name) {
         updateUser(user ? { ...user, name: profile.full_name, fullName: profile.full_name } : user)
@@ -136,14 +143,10 @@ export default function Profile(): JSX.Element {
       // Update initial profile to reflect saved state
       setInitialProfile({ ...profile })
       
-      setSuccess('Profile updated successfully!')
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccess(null)
-      }, 3000)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to update profile')
+      const errorMsg = e instanceof Error ? e.message : 'Failed to update profile'
+      setError(errorMsg)
+      showToast(errorMsg, 'error')
     } finally {
       setSaving(false)
     }
@@ -160,9 +163,7 @@ export default function Profile(): JSX.Element {
           </div>
         </div>
         <Card>
-          <div className="loading-state">
-            <p>Loading your profile...</p>
-          </div>
+          <SkeletonLoader lines={6} height={20} />
         </Card>
       </div>
     )
@@ -180,6 +181,8 @@ export default function Profile(): JSX.Element {
 
       <Card>
         <form className="form-grid" onSubmit={(event) => { event.preventDefault(); void save() }}>
+          <ErrorAlert error={error} onDismiss={() => setError(null)} />
+          
           <div className="grid grid-2">
             <Input 
               label="Full Name" 
@@ -227,11 +230,9 @@ export default function Profile(): JSX.Element {
             onChange={(event) => setProfile({ ...profile, bank_account_details: event.target.value })}
           />
 
-          {error && <div className="alert alert-error">{error}</div>}
-          {success && <div className="alert alert-success">{success}</div>}
 
           <div className="form-actions">
-            <Button type="submit" variant="primary" disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</Button>
+            <Button type="submit" variant="primary" loading={saving}>Save changes</Button>
           </div>
         </form>
       </Card>

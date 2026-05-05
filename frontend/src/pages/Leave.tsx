@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
+import ErrorAlert from '../components/common/ErrorAlert'
+import { showToast } from '../components/common/ToastContainer'
 import StatusBadge from '../components/common/StatusBadge'
 import LeaveForm from '../components/leave/LeaveForm'
 import { useLoading } from '../hooks/useLoading'
@@ -10,6 +12,7 @@ export default function Leave(): JSX.Element {
   const [items, setItems] = useState<LeaveItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
   const { withLoading } = useLoading()
   const isMountedRef = useRef(true)
 
@@ -19,6 +22,7 @@ export default function Leave(): JSX.Element {
 
   async function refreshLeaves(): Promise<void> {
     try {
+      setLoading(true)
       const data = await withLoading(() => hrService.leaves())
       if (!isMountedRef.current) return
 
@@ -27,7 +31,11 @@ export default function Leave(): JSX.Element {
     } catch (err: unknown) {
       if (!isMountedRef.current) return
 
-      setError(err instanceof Error ? err.message : 'Failed to load leave requests')
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load leave requests'
+      setError(errorMsg)
+      showToast(errorMsg, 'error')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -37,6 +45,7 @@ export default function Leave(): JSX.Element {
 
   async function handleLeaveCreated(createdLeave: LeaveItem): Promise<void> {
     setItems((current) => [createdLeave, ...current.filter((item) => item.id !== createdLeave.id)])
+    showToast('Leave request created successfully!', 'success')
     await refreshLeaves()
   }
 
@@ -47,12 +56,12 @@ export default function Leave(): JSX.Element {
           <p className="eyebrow">Leave</p>
           <h2>Leave requests</h2>
         </div>
-        <Button type="button" onClick={() => setIsFormOpen((current) => !current)}>
+        <Button type="button" onClick={() => setIsFormOpen((current) => !current)} loading={loading}>
           {isFormOpen ? 'Hide request form' : 'Request Leave'}
         </Button>
       </div>
 
-      {error && <div className="alert alert-error">{error}</div>}
+      <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
       {isFormOpen && (
         <Card>

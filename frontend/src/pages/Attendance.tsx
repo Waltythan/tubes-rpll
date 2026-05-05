@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import AttendanceTable from '../components/attendance/AttendanceTable'
 import Card from '../components/Card'
+import ErrorAlert from '../components/common/ErrorAlert'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import FullPageLoader from '../components/common/FullPageLoader'
+import { showToast } from '../components/common/ToastContainer'
 import { useLoading } from '../hooks/useLoading'
 import { hrService, type AttendanceItem, type QrTokenResponse } from '../services/hrService'
 import { QRCodeSVG } from 'qrcode.react'
@@ -215,11 +217,14 @@ export default function Attendance(): JSX.Element {
       await hrService.checkIn(qrToken.qrToken)
 
       clearBannerSoon({ tone: 'success', message: 'Check-in successful.' })
+      showToast('Check-in successful!', 'success')
       setQrToken(null)
       setCountdown(0)
       await refreshAttendance(true)
     } catch (err: unknown) {
-      setBanner({ tone: 'danger', message: err instanceof Error ? err.message : 'Check-in failed' })
+      const errorMsg = err instanceof Error ? err.message : 'Check-in failed'
+      showToast(errorMsg, 'error')
+      setBanner({ tone: 'danger', message: errorMsg })
     } finally {
       setActionLoading(false)
     }
@@ -243,9 +248,12 @@ export default function Attendance(): JSX.Element {
       await hrService.checkOut()
 
       clearBannerSoon({ tone: 'success', message: 'Check-out successful.' })
+      showToast('Check-out successful!', 'success')
       await refreshAttendance(true)
     } catch (err: unknown) {
-      setBanner({ tone: 'danger', message: err instanceof Error ? err.message : 'Check-out failed' })
+      const errorMsg = err instanceof Error ? err.message : 'Check-out failed'
+      showToast(errorMsg, 'error')
+      setBanner({ tone: 'danger', message: errorMsg })
     } finally {
       setActionLoading(false)
     }
@@ -269,6 +277,7 @@ export default function Attendance(): JSX.Element {
         </div>
       </div>
 
+      {banner && banner.tone === 'danger' && <ErrorAlert error={banner.message} onDismiss={() => setBanner(null)} />}
       {banner && <div className={`alert alert-${banner.tone}`}>{banner.message}</div>}
 
       <section className="grid grid-2 attendance-top-grid">

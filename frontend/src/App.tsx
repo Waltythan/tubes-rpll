@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import ToastContainer from './components/common/ToastContainer'
 import MainLayout from './components/layout/MainLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
@@ -17,6 +18,7 @@ export default function App(): JSX.Element {
 
   return (
     <>
+      <ToastContainer position="top-right" />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />

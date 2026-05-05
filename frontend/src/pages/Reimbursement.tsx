@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
+import ErrorAlert from '../components/common/ErrorAlert'
+import { showToast } from '../components/common/ToastContainer'
 import StatusBadge from '../components/common/StatusBadge'
 import ReimbursementForm from '../components/reimbursement/ReimbursementForm'
 import { useLoading } from '../hooks/useLoading'
@@ -10,6 +12,7 @@ export default function Reimbursement(): JSX.Element {
   const [items, setItems] = useState<ReimbursementItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
   const { withLoading } = useLoading()
   const isMountedRef = useRef(true)
 
@@ -32,6 +35,7 @@ export default function Reimbursement(): JSX.Element {
   }
 
   useEffect(() => {
+      setLoading(true)
     void refreshReimbursements()
   }, [])
 
@@ -40,7 +44,11 @@ export default function Reimbursement(): JSX.Element {
     await refreshReimbursements()
   }
 
-  function formatAmount(value: number | string | undefined): string {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load reimbursements'
+      setError(errorMsg)
+      showToast(errorMsg, 'error')
+    } finally {
+      setLoading(false)
     if (value === undefined || value === null || value === '') {
       return '-'
     }
@@ -50,6 +58,7 @@ export default function Reimbursement(): JSX.Element {
       return String(value)
     }
 
+    showToast('Reimbursement request created successfully!', 'success')
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -60,12 +69,12 @@ export default function Reimbursement(): JSX.Element {
   return (
     <div className="page-stack">
       <div className="page-heading">
-        <div>
+        <Button type="button" onClick={() => setIsFormOpen((current) => !current)} loading={loading}>
           <p className="eyebrow">Reimbursement</p>
           <h2>Expense claims</h2>
         </div>
         <Button type="button" onClick={() => setIsFormOpen((current) => !current)}>
-          {isFormOpen ? 'Hide request form' : 'Request Reimbursement'}
+      <ErrorAlert error={error} onDismiss={() => setError(null)} />
         </Button>
       </div>
 

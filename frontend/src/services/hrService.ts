@@ -112,6 +112,8 @@ export interface UserItem {
   name?: string | null
   full_name?: string | null
   fullName?: string | null
+  base_salary?: number | string | null
+  baseSalary?: number | string | null
 }
 
 export interface ProfileItem {
@@ -142,13 +144,13 @@ async function getData<T>(path: string): Promise<T> {
   return response.data.data
 }
 
-async function postData<T>(path: string, data?: Record<string, unknown>): Promise<T> {
-  const response = await api.post<BackendResponse<T>>(path, data || {})
+async function postData<T>(path: string, data?: unknown): Promise<T> {
+  const response = await api.post<BackendResponse<T>>(path, (data ?? {}) as object)
   return response.data.data
 }
 
-async function patchData<T>(path: string, data?: Record<string, unknown>): Promise<T> {
-  const response = await api.patch<BackendResponse<T>>(path, data || {})
+async function patchData<T>(path: string, data?: unknown): Promise<T> {
+  const response = await api.patch<BackendResponse<T>>(path, (data ?? {}) as object)
   return response.data.data
 }
 

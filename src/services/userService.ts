@@ -125,8 +125,8 @@ export const userService = {
     const displayName = input.full_name || input.name || null;
 
     const result = await pool.query(
-      `INSERT INTO users (department_id, email, password, role, base_salary, manager_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO users (department_id, email, password, role, base_salary, manager_id, "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
       [
         input.departmentId || null,
@@ -135,6 +135,8 @@ export const userService = {
         input.role,
         Number.isFinite(input.baseSalary) ? input.baseSalary : 0,
         input.managerId || null,
+        new Date(),
+        new Date(),
       ]
     );
 
@@ -181,7 +183,8 @@ export const userService = {
            password = COALESCE($4, password),
            role = COALESCE($5, role),
            base_salary = COALESCE($6, base_salary),
-           manager_id = COALESCE($7, manager_id)
+           manager_id = COALESCE($7, manager_id),
+           "updatedAt" = NOW()
        WHERE user_id = $1
        RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
       [

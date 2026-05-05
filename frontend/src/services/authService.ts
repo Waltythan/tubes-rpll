@@ -24,18 +24,23 @@ export interface LoginResult {
   user: AuthUser
 }
 
-export async function forgotPassword(email: string): Promise<void> {
-  await api.post('/auth/forgot', { email })
-}
-
-export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  await api.post('/auth/reset', { token, newPassword })
+export interface ForgotPasswordResult {
+  resetToken?: string
 }
 
 interface BackendResponse<T> {
   status: string
   message: string
   data: T
+}
+
+export async function forgotPassword(email: string): Promise<ForgotPasswordResult> {
+  const response = await api.post<BackendResponse<ForgotPasswordResult>>('/auth/forgot', { email })
+  return response.data.data || {}
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await api.post('/auth/reset', { token, newPassword })
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResult> {

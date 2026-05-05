@@ -3,8 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
-import { resetPassword } from '../services/authService'
 import { useLoading } from '../hooks/useLoading'
+import { resetPassword } from '../services/authService'
 
 export default function ResetPassword(): JSX.Element {
   const [searchParams] = useSearchParams()
@@ -22,7 +22,10 @@ export default function ResetPassword(): JSX.Element {
   const redirectTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
-    setToken(searchParams.get('token') || '')
+    const nextToken = searchParams.get('token') || ''
+    if (nextToken) {
+      setToken(nextToken)
+    }
   }, [searchParams])
 
   useEffect(() => () => {
@@ -73,7 +76,7 @@ export default function ResetPassword(): JSX.Element {
 
     try {
       await withLoading(() => resetPassword(token.trim(), newPassword))
-      setSuccessMessage('Password updated')
+      setSuccessMessage('Password reset successfully')
       setNewPassword('')
       setConfirmPassword('')
       redirectTimerRef.current = window.setTimeout(() => {
@@ -103,16 +106,27 @@ export default function ResetPassword(): JSX.Element {
             </div>
           </div>
 
+          <div className="alert alert-info">
+            Step 1: use the token from the reset link. Step 2: enter a new password. Step 3: sign in again.
+          </div>
+
           <form className="form-grid" onSubmit={submit}>
-            <Input
-              label="Reset token"
-              type="text"
-              placeholder="Paste token from reset link"
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-              disabled={submitting}
-              helperText={tokenError || 'Token from the reset link'}
-            />
+            {!searchParams.get('token') && (
+              <Input
+                label="Reset token"
+                type="text"
+                placeholder="Paste token from reset link"
+                value={token}
+                onChange={(event) => setToken(event.target.value)}
+                disabled={submitting}
+                helperText={tokenError || 'Token from the reset link'}
+              />
+            )}
+            {searchParams.get('token') && (
+              <div className="alert alert-success">
+                Reset token loaded from the recovery link.
+              </div>
+            )}
             <Input
               label="New password"
               type="password"

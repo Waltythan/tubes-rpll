@@ -103,6 +103,23 @@ export interface UserItem {
   fullName?: string | null
 }
 
+export interface ProfileItem {
+  user_id?: number
+  full_name?: string | null
+  email?: string | null
+  role?: string | null
+  phone_number?: string | null
+  address?: string | null
+  profile_picture_url?: string | null
+}
+
+export interface ProfileUpdateInput {
+  full_name?: string
+  address?: string
+  phone_number?: string
+  profile_picture_url?: string
+}
+
 export interface DepartmentItem {
   dep_id: number
   name: string
@@ -139,8 +156,8 @@ export interface CheckInResponse {
 }
 
 export const hrService = {
-  attendance: () => getData<AttendanceItem[]>('/attendance/history'),
-  attendanceHistory: () => getData<AttendanceItem[]>('/attendance/history'),
+  attendance: () => getData<AttendanceItem[]>('/attendance/me'),
+  attendanceHistory: () => getData<AttendanceItem[]>('/attendance/me'),
   leaves: () => getData<LeaveItem[]>('/leaves/me'),
   teamLeaves: () => getData<LeaveItem[]>('/leaves/team'),
   createLeave: (data: CreateLeaveRequestInput) => postData<LeaveItem>('/leaves', data),
@@ -162,6 +179,34 @@ export const hrService = {
   getUsers: () => getData<UserItem[]>('/users'),
   getManagers: () => getData<UserItem[]>('/users/managers'),
   getDepartments: () => getData<DepartmentItem[]>('/users/departments'),
+  getUserProfile: async (userId: number): Promise<ProfileItem | null> => {
+    try {
+      const profile = await getData<ProfileItem | null>(`/profiles/${userId}`)
+      if (profile) {
+        return profile
+      }
+    } catch {
+      // Fallback to users list when profile lookup endpoint is unavailable.
+    }
+
+    const users = await hrService.getUsers()
+    const user = users.find((item) => (item.user_id ?? item.id) === userId)
+
+    if (!user) {
+      return null
+    }
+
+    return {
+      user_id: user.user_id ?? user.id,
+      full_name: user.full_name || user.fullName || user.name || null,
+      email: user.email || null,
+      role: user.role || user.roles || null,
+      phone_number: null,
+      address: null,
+      profile_picture_url: null,
+    }
+  },
+  updateUserProfile: (userId: number, data: ProfileUpdateInput) => patchData<ProfileItem>(`/profiles/${userId}`, data),
   createUser: (data: Record<string, unknown>) => postData<any>('/users', data),
   updateUser: (userId: number, data: Record<string, unknown>) => patchData<any>(`/users/${userId}`, data),
   deleteUser: async (userId: number) => {

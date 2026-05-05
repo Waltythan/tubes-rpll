@@ -3,9 +3,11 @@ import ToastContainer from './components/common/ToastContainer'
 import MainLayout from './components/layout/MainLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
-import Attendance from './pages/Attendance'
 import ActivityLogs from './pages/ActivityLogs'
 import AdminAttendance from './pages/AdminAttendance'
+import AdminEditProfile from './pages/AdminEditProfile'
+import AdminPayroll from './pages/AdminPayroll'
+import Attendance from './pages/Attendance'
 import Dashboard from './pages/Dashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import Leave from './pages/Leave'
@@ -63,6 +65,8 @@ export default function App(): JSX.Element {
         >
           <Route path="/payroll" element={<Payroll />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/admin/profiles/:userId" element={<AdminEditProfile />} />
+          <Route path="/admin/payroll" element={<AdminPayroll />} />
           <Route path="/activity-logs" element={<ActivityLogs />} />
           <Route path="/admin/attendance" element={<AdminAttendance />} />
           <Route path="/admin/payroll" element={<PayrollAdmin />} />

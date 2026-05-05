@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
-import Input from '../components/common/Input'
 import ErrorAlert from '../components/common/ErrorAlert'
+import Input from '../components/common/Input'
 import { showToast } from '../components/common/ToastContainer'
 import { hrService, type DepartmentItem, type UserItem } from '../services/hrService'
 
@@ -16,6 +17,7 @@ function getUserLabel(user: UserItem): string {
 }
 
 export default function Users(): JSX.Element {
+  const navigate = useNavigate()
   const [users, setUsers] = useState<UserItem[]>([])
   const [managers, setManagers] = useState<UserItem[]>([])
   const [departments, setDepartments] = useState<DepartmentItem[]>([])
@@ -82,6 +84,13 @@ export default function Users(): JSX.Element {
     setEditing(user)
     setIsFormOpen(true)
     setTimeout(() => nameRef.current?.focus(), 60)
+  }
+
+  function openEditProfile(user: UserItem) {
+    const userId = getUserId(user)
+    if (!userId) return
+
+    navigate(`/admin/profiles/${userId}`)
   }
 
   async function handleSubmit(e?: React.FormEvent) {
@@ -238,6 +247,7 @@ export default function Users(): JSX.Element {
                       <td className="table-cell">
                         <div style={{ display: 'flex', gap: 8 }}>
                           <Button type="button" variant="secondary" onClick={() => openEdit(user)}>Edit</Button>
+                          <Button type="button" variant="secondary" onClick={() => openEditProfile(user)}>Edit Profile</Button>
                           <Button type="button" onClick={() => handleDelete(user)}>Delete</Button>
                         </div>
                       </td>

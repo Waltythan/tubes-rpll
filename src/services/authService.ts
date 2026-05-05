@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import pool from './db';
 import { ApiError } from '../utils/apiError';
-import { generateAccessToken, UserRole, generatePasswordResetToken, verifyPasswordResetToken } from '../utils/jwtHelper';
+import { generateAccessToken, generatePasswordResetToken, UserRole, verifyPasswordResetToken } from '../utils/jwtHelper';
+import pool from './db';
 
 type LoginResult = {
   accessToken: string;
@@ -100,8 +100,16 @@ export const authService = {
       [user.user_id, token, expiresAt.toISOString()]
     );
 
-    // TODO: enqueue/send email with reset link containing token (out of scope)
-    return;
+    // Demo-friendly: expose token only in development and always log it for local testing.
+    console.log('RESET TOKEN:', token);
+
+    if ((process.env.NODE_ENV || 'development') === 'development') {
+      return {
+        resetToken: token,
+      };
+    }
+
+    return {};
   },
 
   async resetPassword(token: string, newPassword: string) {

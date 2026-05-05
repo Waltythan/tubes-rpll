@@ -16,6 +16,7 @@ export default function Leave(): JSX.Element {
   const [loading, setLoading] = useState(false)
   const { withLoading } = useLoading()
   const isMountedRef = useRef(true)
+  const prevStatusRef = useRef<Record<number, string>>({})
 
   useEffect(() => () => {
     isMountedRef.current = false
@@ -27,7 +28,30 @@ export default function Leave(): JSX.Element {
       const data = await withLoading(() => hrService.leaves())
       if (!isMountedRef.current) return
 
-      setItems(data)
+      // sort: pending first, then by updatedAt (or createdAt) desc
+      const sorted = [...data].sort((a, b) => {
+        const aStatus = String(a.status || 'pending').toLowerCase()
+        const bStatus = String(b.status || 'pending').toLowerCase()
+        if (aStatus === 'pending' && bStatus !== 'pending') return -1
+        if (aStatus !== 'pending' && bStatus === 'pending') return 1
+        const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime()
+        const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime()
+        return bTime - aTime
+      })
+
+      // compare previous statuses and show toasts for changes
+      for (const item of sorted) {
+        const prev = prevStatusRef.current[item.id]
+        const curr = String(item.status || 'pending').toLowerCase()
+        if (prev && prev !== curr) {
+          if (curr === 'approved') showToast(`Your leave request #${item.id} was approved.`, 'success')
+          else if (curr === 'rejected' || curr === 'declined') showToast(`Your leave request #${item.id} was rejected.`, 'error')
+          else showToast(`Your leave request #${item.id} status changed to ${curr}.`, 'info')
+        }
+        prevStatusRef.current[item.id] = curr
+      }
+
+      setItems(sorted)
       setError(null)
     } catch (err: unknown) {
       if (!isMountedRef.current) return
@@ -42,11 +66,26 @@ export default function Leave(): JSX.Element {
 
   useEffect(() => {
     void refreshLeaves()
+
+    function onVisibility() {
+      if (document.visibilityState === 'visible') void refreshLeaves()
+    }
+    function onFocus() { void refreshLeaves() }
+
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [])
 
   async function handleLeaveCreated(createdLeave: LeaveItem): Promise<void> {
     setItems((current) => [createdLeave, ...current.filter((item) => item.id !== createdLeave.id)])
     showToast('Leave request created successfully!', 'success')
+    // update prevStatus for created item
+    prevStatusRef.current[createdLeave.id] = String(createdLeave.status || 'pending').toLowerCase()
     await refreshLeaves()
   }
 
@@ -79,7 +118,19 @@ export default function Leave(): JSX.Element {
                   <p className="card-title">{item.type || 'Leave'} #{item.id}</p>
                   <p className="muted">{item.start_date || '-'} to {item.end_date || '-'}</p>
                 </div>
-                <StatusBadge status={item.status || 'pending'} />
+                <div className="prominent-status">
+                  <StatusBadge status={item.status || 'pending'} />
+                  {item.approved_by && (
+                    <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
+                      By: #{item.approved_by}
+                    </div>
+                  )}
+                  {item.updatedAt && (
+                    <div className="muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+                      {new Date(item.updatedAt).toLocaleString()}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Card>

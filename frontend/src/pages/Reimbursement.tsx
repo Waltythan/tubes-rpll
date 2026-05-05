@@ -16,6 +16,7 @@ export default function Reimbursement(): JSX.Element {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const isMountedRef = useRef(true)
+  const prevStatusRef = useRef<Record<number, string>>({})
 
   useEffect(() => {
     isMountedRef.current = true
@@ -30,7 +31,29 @@ export default function Reimbursement(): JSX.Element {
       const data = await hrService.reimbursements()
       if (!isMountedRef.current) return
 
-      setItems(data)
+      // sort: pending first, then by updatedAt (or request_date) desc
+      const sorted = [...data].sort((a, b) => {
+        const aStatus = String(a.status || 'pending').toLowerCase()
+        const bStatus = String(b.status || 'pending').toLowerCase()
+        if (aStatus === 'pending' && bStatus !== 'pending') return -1
+        if (aStatus !== 'pending' && bStatus === 'pending') return 1
+        const aTime = new Date(a.updatedAt || a.request_date || 0).getTime()
+        const bTime = new Date(b.updatedAt || b.request_date || 0).getTime()
+        return bTime - aTime
+      })
+
+      for (const item of sorted) {
+        const prev = prevStatusRef.current[item.id]
+        const curr = String(item.status || 'pending').toLowerCase()
+        if (prev && prev !== curr) {
+          if (curr === 'approved') showToast(`Your reimbursement #${item.id} was approved.`, 'success')
+          else if (curr === 'rejected') showToast(`Your reimbursement #${item.id} was rejected.`, 'error')
+          else showToast(`Your reimbursement #${item.id} status changed to ${curr}.`, 'info')
+        }
+        prevStatusRef.current[item.id] = curr
+      }
+
+      setItems(sorted)
       setError(null)
     } catch (err: unknown) {
       if (!isMountedRef.current) return
@@ -47,6 +70,19 @@ export default function Reimbursement(): JSX.Element {
 
   useEffect(() => {
     void refreshReimbursements()
+
+    function onVisibility() {
+      if (document.visibilityState === 'visible') void refreshReimbursements()
+    }
+    function onFocus() { void refreshReimbursements() }
+
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [])
 
   async function handleReimbursementCreated(createdReimbursement: ReimbursementItem): Promise<void> {
@@ -55,6 +91,7 @@ export default function Reimbursement(): JSX.Element {
       setItems((current) => [createdReimbursement, ...current.filter((item) => item.id !== createdReimbursement.id)])
       showToast('Reimbursement request created successfully!', 'success')
       setIsFormOpen(false)
+      prevStatusRef.current[createdReimbursement.id] = String(createdReimbursement.status || 'pending').toLowerCase()
       await refreshReimbursements()
     } finally {
       if (isMountedRef.current) {
@@ -116,7 +153,19 @@ export default function Reimbursement(): JSX.Element {
                       <p className="muted">{item.description || 'No description provided'}</p>
                       <p className="card-value">{formatAmount(item.amount)}</p>
                     </div>
-                    <StatusBadge status={item.status || 'pending'} />
+                    <div className="prominent-status">
+                      <StatusBadge status={item.status || 'pending'} />
+                      {item.approved_by && (
+                        <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
+                          By: #{item.approved_by}
+                        </div>
+                      )}
+                      {item.updatedAt && (
+                        <div className="muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+                          {new Date(item.updatedAt).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>

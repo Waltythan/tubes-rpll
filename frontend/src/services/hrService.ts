@@ -25,6 +25,7 @@ export interface LeaveItem {
   end_date?: string
   attachment_url?: string
   createdAt?: string
+  updatedAt?: string
 }
 
 export interface CreateLeaveRequestInput {
@@ -44,6 +45,7 @@ export interface ReimbursementItem {
   status?: string
   attachment_url?: string
   request_date?: string
+  updatedAt?: string
 }
 
 export interface CreateReimbursementInput {

@@ -340,6 +340,9 @@ a { color: inherit; }
 .badge-warning { background: #fef3c7; color: #92400e; }
 .badge-danger { background: #fee2e2; color: #b91c1c; }
 
+.prominent-status { display: grid; justify-items: end; align-items: center; gap: 4px; }
+.prominent-status .badge { font-size: 0.95rem; padding: 10px 14px; }
+
 .field { display: grid; gap: 8px; }
 .field-label { font-size: 0.92rem; font-weight: 600; }
 .input {

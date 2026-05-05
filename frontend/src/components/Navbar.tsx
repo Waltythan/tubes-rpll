@@ -2,12 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Button from './Button'
 
-interface NavbarProps {
-  onToggleSidebar: () => void
-  sidebarCollapsed: boolean
-}
-
-export default function Navbar({ onToggleSidebar, sidebarCollapsed }: NavbarProps): JSX.Element {
+export default function Navbar(): JSX.Element {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const isAdmin = (user?.role || user?.roles) === 'admin'
@@ -20,9 +15,6 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }: NavbarProp
   return (
     <header className="topbar card-surface">
       <div className="topbar-left">
-        <Button type="button" variant="ghost" onClick={onToggleSidebar} className="sidebar-toggle">
-          {sidebarCollapsed ? 'Expand' : 'Collapse'}
-        </Button>
         <div>
           <p className="topbar-kicker">Mini HRIS</p>
           <h1 className="topbar-title">{isAdmin ? 'Admin Dashboard' : 'Workforce Dashboard'}</h1>

@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 import { PoolClient } from 'pg';
-import pool from './db';
 import { ApiError } from '../utils/apiError';
 import { isOfficeIp } from '../utils/ipCheck';
 import { UserRole } from '../utils/jwtHelper';
+import pool from './db';
 
 const QR_TOKEN_TTL_MS = 30_000;
 
@@ -83,7 +83,7 @@ export const attendanceService = {
   }) {
     const now = params.now || new Date();
     if (!isOfficeIp(params.clientIp)) {
-      throw new ApiError(403, `Akses ditolak. IP Anda (${params.clientIp}) tidak terdaftar dalam jaringan kantor.`);
+      throw new ApiError(403, 'Check-in only allowed from office network');
     }
 
     const client = await pool.connect();
@@ -178,7 +178,7 @@ export const attendanceService = {
   }) {
     const now = params.now || new Date();
     if (!isOfficeIp(params.clientIp)) {
-      throw new ApiError(403, `Akses ditolak. IP Anda (${params.clientIp}) tidak terdaftar dalam jaringan kantor.`);
+      throw new ApiError(403, 'Check-out only allowed from office network');
     }
 
     const dateKey = now.toISOString().slice(0, 10);

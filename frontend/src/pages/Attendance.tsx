@@ -1,14 +1,14 @@
+import { QRCodeSVG } from 'qrcode.react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import AttendanceTable from '../components/attendance/AttendanceTable'
 import Card from '../components/Card'
-import ErrorAlert from '../components/common/ErrorAlert'
-import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
+import Button from '../components/common/Button'
+import ErrorAlert from '../components/common/ErrorAlert'
 import FullPageLoader from '../components/common/FullPageLoader'
 import { showToast } from '../components/common/ToastContainer'
 import { useLoading } from '../hooks/useLoading'
 import { hrService, type AttendanceItem, type QrTokenResponse } from '../services/hrService'
-import { QRCodeSVG } from 'qrcode.react'
 
 interface TodayAttendance {
   checkedIn: boolean
@@ -55,6 +55,18 @@ function formatDate(isoString: string | null | undefined): string {
 function getDateKey(value: string | null | undefined): string {
   if (!value) return ''
   return value.slice(0, 10)
+}
+
+function mapAttendanceError(action: 'check-in' | 'check-out', errorMessage: string): string {
+  const normalized = errorMessage.toLowerCase()
+
+  if (normalized.includes('office network') || normalized.includes('jaringan kantor') || normalized.includes('ip anda')) {
+    return action === 'check-in'
+      ? 'You must be in office network to check in.'
+      : 'You must be in office network to check out.'
+  }
+
+  return errorMessage
 }
 
 export default function Attendance(): JSX.Element {
@@ -222,7 +234,7 @@ export default function Attendance(): JSX.Element {
       setCountdown(0)
       await refreshAttendance(true)
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Check-in failed'
+      const errorMsg = mapAttendanceError('check-in', err instanceof Error ? err.message : 'Check-in failed')
       showToast(errorMsg, 'error')
       setBanner({ tone: 'danger', message: errorMsg })
     } finally {
@@ -251,7 +263,7 @@ export default function Attendance(): JSX.Element {
       showToast('Check-out successful!', 'success')
       await refreshAttendance(true)
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Check-out failed'
+      const errorMsg = mapAttendanceError('check-out', err instanceof Error ? err.message : 'Check-out failed')
       showToast(errorMsg, 'error')
       setBanner({ tone: 'danger', message: errorMsg })
     } finally {

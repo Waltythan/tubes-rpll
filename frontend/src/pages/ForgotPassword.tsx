@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
-import { forgotPassword } from '../services/authService'
 import { useLoading } from '../hooks/useLoading'
+import { forgotPassword } from '../services/authService'
 
 export default function ForgotPassword(): JSX.Element {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
@@ -41,8 +42,14 @@ export default function ForgotPassword(): JSX.Element {
     setSubmitting(true)
 
     try {
-      await withLoading(() => forgotPassword(email.trim().toLowerCase()))
-      setSuccessMessage('If this email exists, a reset link has been sent')
+      const result = await withLoading(() => forgotPassword(email.trim().toLowerCase()))
+      setSuccessMessage('Reset token generated. Redirecting to password reset...')
+
+      if (result.resetToken) {
+        window.setTimeout(() => {
+          navigate(`/reset-password?token=${encodeURIComponent(result.resetToken || '')}`, { replace: true })
+        }, 700)
+      }
     } catch (err: unknown) {
       setApiError(err instanceof Error ? err.message : 'Failed to send reset link')
     } finally {
@@ -65,6 +72,10 @@ export default function ForgotPassword(): JSX.Element {
               <p className="eyebrow">Account recovery</p>
               <h2>Forgot password</h2>
             </div>
+          </div>
+
+          <div className="alert alert-info">
+            Step 1: enter your email. Step 2: in development, you will be redirected with a reset token. Step 3: set a new password.
           </div>
 
           <form className="form-grid" onSubmit={submit}>

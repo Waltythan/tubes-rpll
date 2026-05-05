@@ -61,6 +61,20 @@ export interface PayrollItem {
   period_end?: string
   net_salary?: number | string
   status?: string
+  generated_at?: string
+}
+
+export interface PayrollGenerationItem {
+  userId: number
+  payrollId: number
+  netSalary: number
+}
+
+export interface PayrollGenerationResult {
+  periodStart: string
+  periodEnd: string
+  payrollCount: number
+  generatedPayrolls: PayrollGenerationItem[]
 }
 
 export interface UserItem {
@@ -76,6 +90,23 @@ export interface UserItem {
   name?: string | null
   full_name?: string | null
   fullName?: string | null
+}
+
+export interface ProfileItem {
+  user_id?: number
+  full_name?: string | null
+  email?: string | null
+  role?: string | null
+  phone_number?: string | null
+  address?: string | null
+  profile_picture_url?: string | null
+}
+
+export interface ProfileUpdateInput {
+  full_name?: string
+  address?: string
+  phone_number?: string
+  profile_picture_url?: string
 }
 
 export interface DepartmentItem {
@@ -114,8 +145,8 @@ export interface CheckInResponse {
 }
 
 export const hrService = {
-  attendance: () => getData<AttendanceItem[]>('/attendance/history'),
-  attendanceHistory: () => getData<AttendanceItem[]>('/attendance/history'),
+  attendance: () => getData<AttendanceItem[]>('/attendance/me'),
+  attendanceHistory: () => getData<AttendanceItem[]>('/attendance/me'),
   leaves: () => getData<LeaveItem[]>('/leaves/me'),
   teamLeaves: () => getData<LeaveItem[]>('/leaves/team'),
   createLeave: (data: CreateLeaveRequestInput) => postData<LeaveItem>('/leaves', data),
@@ -125,11 +156,43 @@ export const hrService = {
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
+  generatePayroll: (month: number, year: number) => {
+    const period = new Date(Date.UTC(year, month - 1, 1)).toISOString().slice(0, 10)
+    return postData<PayrollGenerationResult>('/payroll/generate', { period })
+  },
 
   // Admin user management
   getUsers: () => getData<UserItem[]>('/users'),
   getManagers: () => getData<UserItem[]>('/users/managers'),
   getDepartments: () => getData<DepartmentItem[]>('/users/departments'),
+  getUserProfile: async (userId: number): Promise<ProfileItem | null> => {
+    try {
+      const profile = await getData<ProfileItem | null>(`/profiles/${userId}`)
+      if (profile) {
+        return profile
+      }
+    } catch {
+      // Fallback to users list when profile lookup endpoint is unavailable.
+    }
+
+    const users = await hrService.getUsers()
+    const user = users.find((item) => (item.user_id ?? item.id) === userId)
+
+    if (!user) {
+      return null
+    }
+
+    return {
+      user_id: user.user_id ?? user.id,
+      full_name: user.full_name || user.fullName || user.name || null,
+      email: user.email || null,
+      role: user.role || user.roles || null,
+      phone_number: null,
+      address: null,
+      profile_picture_url: null,
+    }
+  },
+  updateUserProfile: (userId: number, data: ProfileUpdateInput) => patchData<ProfileItem>(`/profiles/${userId}`, data),
   createUser: (data: Record<string, unknown>) => postData<any>('/users', data),
   updateUser: (userId: number, data: Record<string, unknown>) => patchData<any>(`/users/${userId}`, data),
   deleteUser: async (userId: number) => {

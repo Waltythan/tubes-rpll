@@ -27,12 +27,20 @@
 ### Forgot Password
 - **Backend API:** ✅ `POST /auth/forgot`
 - **Frontend UI:** ✅ Forgot password page
-- **Status:** ⚠️ PARTIAL (no email sending)
+- **Features:**
+	- Token generation
+	- Demo email simulation (token returned in dev)
+	- Auto redirect to reset page
+- **Status:** ✅ COMPLETE
 
 ### Reset Password
 - **Backend API:** ✅ `POST /auth/reset`
 - **Frontend UI:** ✅ Reset password page
-- **Status:** ⚠️ PARTIAL (manual token required)
+- **Features:**
+	- Token via URL or input
+	- Password update
+	- Redirect to login after success
+- **Status:** ✅ COMPLETE
 
 ### Logout
 - **Backend API:** ✅ Token clear via service
@@ -85,7 +93,15 @@
 ### Check In
 - **Backend API:** ✅ `POST /attendance/check-in`
 - **Frontend UI:** ✅ Check-in flow
-- **Status:** ⚠️ PARTIAL (IP validation may depend on deployment)
+- **Features:**
+	- QR validation
+	- duplicate prevention
+	- environment-aware IP validation
+- **Status:** ✅ COMPLETE
+- **Notes:**
+	- IP validation is now environment-aware
+	- Development allows local testing
+	- Production enforces office network restriction
 
 ### Check Out
 - **Backend API:** ✅ `POST /attendance/check-out`
@@ -93,7 +109,7 @@
 - **Status:** ✅ COMPLETE
 
 ### View Own History
-- **Backend API:** ✅ `GET /attendance/history`
+- **Backend API:** ✅ `GET /attendance/me`
 - **Frontend UI:** ✅ Attendance history table
 - **Status:** ✅ COMPLETE
 
@@ -161,8 +177,12 @@
 
 ### Generate Payroll
 - **Backend API:** ✅ `POST /payroll/generate`
-- **Frontend UI:** ❌ No generation UI
-- **Status:** ⚠️ PARTIAL
+- **Frontend UI:** ✅ Admin payroll generation page
+- **Features:**
+	- Month/year form
+	- Payroll generation action
+	- Success/error feedback
+- **Status:** ✅ COMPLETE
 
 ### Add Adjustments
 - **Backend API:** ✅ `POST /payroll/:payrollId/items`
@@ -190,8 +210,12 @@
 
 ### Admin Update Profile
 - **Backend API:** ✅ `PATCH /profiles/:userId`
-- **Frontend UI:** ❌ No admin UI
-- **Status:** ⚠️ PARTIAL
+- **Frontend UI:** ✅ Admin edit profile page
+- **Features:**
+	- Edit any user profile
+	- Role-based access (admin only)
+	- Reuses profile form structure
+- **Status:** ✅ COMPLETE
 
 ---
 
@@ -207,9 +231,14 @@
 ## 9. ROLES & PERMISSIONS (3/3 roles)
 
 ### Admin Role
-- **Can:** Create/delete users, view logs, access payroll, manage profiles via API
-- **Frontend Support:** ✅ User management and activity logs UIs implemented
-- **Status:** ⚠️ PARTIAL (payroll/admin profile UI still missing)
+- **Can:** Create/delete users, view logs, access payroll, manage profiles
+- **Frontend Support:** ✅ Fully implemented
+- **Features:**
+	- User management UI
+	- Activity logs viewer
+	- Payroll generation UI
+	- Admin profile edit UI
+- **Status:** ✅ COMPLETE
 
 ### Manager Role
 - **Can:** View team leave/reimbursement, approve requests
@@ -247,7 +276,7 @@
 | Delete User | ✅ | ✅ | ✅ | ✅ |
 | **Attendance** ||||
 | Generate QR | ✅ | ✅ | ✅ | ✅ |
-| Check In | ✅ | ✅ | ⚠️ | ⚠️ |
+| Check In | ✅ | ✅ | ✅ | ✅ |
 | Check Out | ✅ | ✅ | ✅ | ✅ |
 | View History | ✅ | ✅ | ✅ | ✅ |
 | **Leave** ||||
@@ -261,13 +290,13 @@
 | View Team | ✅ | ✅ | ✅ | ✅ |
 | Approve/Reject | ✅ | ✅ | ✅ | ✅ |
 | **Payroll** ||||
-| Generate | ✅ | ❌ | ⚠️ | ❌ |
+| Generate | ✅ | ✅ | ✅ | ✅ |
 | Add Adjustment | ✅ | ❌ | ⚠️ | ❌ |
 | View Own | ✅ | ⚠️ | ⚠️ | ⚠️ |
 | **Profile** ||||
 | View Own | ✅ | ✅ | ✅ | ✅ |
 | Update Own | ✅ | ✅ | ✅ | ✅ |
-| Admin Update | ✅ | ❌ | ⚠️ | ❌ |
+| Admin Update | ✅ | ✅ | ✅ | ✅ |
 | **Audit** ||||
 | Activity Logs | ✅ | ✅ | ✅ | ✅ |
 | **Dashboard** ||||
@@ -285,7 +314,7 @@
 | Leave Management | 100% | ✅ Good | ✅ Yes |
 | Reimbursement | 100% | ✅ Good | ✅ Yes |
 | Payroll | 33% | ⚠️ Low | ❌ No |
-| Profile Management | 67% | ⚠️ Partial | ✅ Yes |
+| Profile Management | 100% | ✅ Good | ✅ Yes |
 | Activity Logs | 100% | ✅ Good | ✅ Yes |
 | **Overall** | **84%** | ✅ Good | ✅ Yes |
 
@@ -295,9 +324,7 @@
 
 These endpoints still work via API but do not have a dedicated frontend screen:
 
-1. `POST /payroll/generate` - Generate payroll (admin)
-2. `POST /payroll/:payrollId/items` - Add payroll adjustment (admin)
-3. `PATCH /profiles/:userId` - Admin update profile
+1. `POST /payroll/:payrollId/items` - Add payroll adjustment (admin)
 
 ---
 

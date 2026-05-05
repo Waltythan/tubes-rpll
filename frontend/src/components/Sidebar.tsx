@@ -49,8 +49,9 @@ export default function Sidebar(_: SidebarProps): JSX.Element {
             <div className="sidebar-section-label">
               Admin
             </div>
-            <NavLink to="/admin/payroll" className={navLinkClass}><span className="nav-icon">$</span><span className="nav-label">Payroll Admin</span></NavLink>
-            <NavLink to="/users" className={navLinkClass}><span className="nav-icon">U</span><span className="nav-label">User Management</span></NavLink>
+            <NavLink to="/admin/payroll" className={navLinkClass}><span className="nav-icon">$</span><span className="nav-label">Generate Payroll</span></NavLink>
+            <NavLink to="/payroll" className={navLinkClass}><span className="nav-icon">$</span><span className="nav-label">Payroll</span></NavLink>
+            <NavLink to="/users" className={navLinkClass}><span className="nav-icon">U</span><span className="nav-label">Users</span></NavLink>
             <NavLink to="/admin/attendance" className={navLinkClass}><span className="nav-icon">📝</span><span className="nav-label">Attendance</span></NavLink>
             <NavLink to="/activity-logs" className={navLinkClass}><span className="nav-icon">L</span><span className="nav-label">Activity Logs</span></NavLink>
           </>

@@ -55,26 +55,37 @@ export interface CreateReimbursementInput {
   description: string
 }
 
+export interface PayrollAdjustmentItem {
+  id?: number
+  payroll_id?: number
+  type?: 'allowance' | 'deduction'
+  amount?: number | string
+  description?: string | null
+  reference_id?: string | null
+}
+
 export interface PayrollItem {
   id: number
   period_start?: string
   period_end?: string
   net_salary?: number | string
+  total_allowance?: number | string
+  total_deduction?: number | string
   status?: string
   generated_at?: string
+  items?: PayrollAdjustmentItem[]
 }
 
-export interface PayrollGenerationItem {
-  userId: number
-  payrollId: number
-  netSalary: number
+export interface GeneratePayrollInput {
+  month: number
+  year: number
 }
 
-export interface PayrollGenerationResult {
-  periodStart: string
-  periodEnd: string
-  payrollCount: number
-  generatedPayrolls: PayrollGenerationItem[]
+export interface AddPayrollItemInput {
+  type: 'allowance' | 'deduction'
+  amount: number
+  description?: string
+  reference?: string
 }
 
 export interface UserItem {
@@ -156,10 +167,13 @@ export const hrService = {
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
-  generatePayroll: (month: number, year: number) => {
-    const period = new Date(Date.UTC(year, month - 1, 1)).toISOString().slice(0, 10)
-    return postData<PayrollGenerationResult>('/payroll/generate', { period })
-  },
+  generatePayroll: ({ month, year }: GeneratePayrollInput) => postData<PayrollItem>('/payroll/generate', { month, year }),
+  addPayrollItem: (payrollId: number, data: AddPayrollItemInput) => postData<PayrollAdjustmentItem>(`/payroll/${payrollId}/items`, {
+    type: data.type,
+    amount: data.amount,
+    description: data.description,
+    referenceId: data.reference,
+  }),
 
   // Admin user management
   getUsers: () => getData<UserItem[]>('/users'),

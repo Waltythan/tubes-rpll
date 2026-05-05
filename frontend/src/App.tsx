@@ -15,6 +15,7 @@ import LeaveApprovals from './pages/LeaveApprovals'
 import Login from './pages/Login'
 import OrgChart from './pages/OrgChart'
 import Payroll from './pages/Payroll'
+import PayrollAdmin from './pages/PayrollAdmin'
 import Profile from './pages/Profile'
 import Reimbursement from './pages/Reimbursement'
 import ReimbursementApprovals from './pages/ReimbursementApprovals'
@@ -68,6 +69,7 @@ export default function App(): JSX.Element {
           <Route path="/admin/payroll" element={<AdminPayroll />} />
           <Route path="/activity-logs" element={<ActivityLogs />} />
           <Route path="/admin/attendance" element={<AdminAttendance />} />
+          <Route path="/admin/payroll" element={<PayrollAdmin />} />
         </Route>
 
         {/* Catch-all redirect */}

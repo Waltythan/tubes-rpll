@@ -5,6 +5,7 @@ import { profileService } from '../services/profileService';
 import { sendResponse } from '../utils/apiResponse';
 import { ApiError } from '../utils/apiError';
 import { parseWithSchema, profileUpdateSchema, positiveIntSchema } from '../utils/requestValidation';
+import { extractClientIp } from '../utils/ipCheck';
 
 const router = express.Router();
 
@@ -33,8 +34,14 @@ router.patch('/me', jwtAuth, async (req: Request, res: Response, next: NextFunct
     if (!user) throw new ApiError(401, 'Unauthorized');
 
     const payload = parseWithSchema(profileUpdateSchema, req.body || {});
+    const clientIp = extractClientIp(req);
+    const userAgent = req.headers['user-agent'] as string | undefined;
 
-    const updated = await profileService.upsertProfile(parseWithSchema(positiveIntSchema, user.id), payload);
+    const updated = await profileService.upsertProfile(
+      parseWithSchema(positiveIntSchema, user.id),
+      payload,
+      { ipAddress: clientIp, userAgent: userAgent }
+    );
     sendResponse(res, 200, 'Profile updated', updated);
   } catch (err) {
     next(err);
@@ -45,10 +52,18 @@ router.patch('/me', jwtAuth, async (req: Request, res: Response, next: NextFunct
 router.patch('/:userId', jwtAuth, requireRoles('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const targetId = parseWithSchema(positiveIntSchema, req.params.userId);
+    const authReq = req as any;
+    const adminId = parseWithSchema(positiveIntSchema, authReq.user?.id);
 
     const payload = parseWithSchema(profileUpdateSchema, req.body || {});
+    const clientIp = extractClientIp(req);
+    const userAgent = req.headers['user-agent'] as string | undefined;
 
-    const updated = await profileService.adminUpdateProfile(targetId, payload);
+    const updated = await profileService.adminUpdateProfile(
+      targetId,
+      payload,
+      { adminUserId: adminId, ipAddress: clientIp, userAgent: userAgent }
+    );
     sendResponse(res, 200, 'Profile updated by admin', updated);
   } catch (err) {
     next(err);

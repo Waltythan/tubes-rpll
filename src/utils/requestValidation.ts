@@ -42,6 +42,7 @@ export const resetPasswordSchema = z.object({
 });
 
 export const profileUpdateSchema = z.object({
+  full_name: z.string().trim().min(3).max(200, 'Nama maksimal 200 karakter').optional(),
   address: z.string().trim().max(500).optional(),
   phone_number: z.string().trim().min(3).max(32).optional(),
   profile_picture_url: z.string().trim().url('profile_picture_url harus berupa URL').optional(),

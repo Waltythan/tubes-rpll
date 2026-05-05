@@ -1,6 +1,7 @@
 import pool from './db';
 import { ApiError } from '../utils/apiError';
 import bcrypt from 'bcrypt';
+import { activityLogService } from './activityLogService';
 
 type UserCreateInput = {
   departmentId?: number | null;
@@ -48,7 +49,7 @@ export const userService = {
     return result.rows;
   },
 
-  async createUser(input: UserCreateInput) {
+  async createUser(input: UserCreateInput, adminUserId?: number, loggingOptions?: { ipAddress?: string; userAgent?: string }) {
     await validateManagerAssignment(null, input.managerId ?? null);
 
     const hashedPassword = await bcrypt.hash(input.password, 10);
@@ -67,14 +68,27 @@ export const userService = {
       ]
     );
 
-    const row = result.rows[0] as { createdAt?: string };
+    const row = result.rows[0] as { user_id: number; createdAt?: string };
+
+    // Log activity
+    if (adminUserId) {
+      await activityLogService.create({
+        userId: adminUserId,
+        action: 'user.created',
+        targetTable: 'users',
+        targetId: String(row.user_id),
+        ipAddress: loggingOptions?.ipAddress,
+        userAgent: loggingOptions?.userAgent,
+      });
+    }
+
     return {
       ...result.rows[0],
       created_at: row.createdAt,
     };
   },
 
-  async updateUser(userId: number, input: Partial<UserCreateInput>) {
+  async updateUser(userId: number, input: Partial<UserCreateInput>, adminUserId?: number, loggingOptions?: { ipAddress?: string; userAgent?: string }) {
     const existing = await pool.query('SELECT user_id FROM users WHERE user_id = $1 LIMIT 1', [userId]);
     if (existing.rowCount !== 1) {
       throw new ApiError(404, 'User tidak ditemukan');
@@ -107,6 +121,18 @@ export const userService = {
       ]
     );
 
+    // Log activity
+    if (adminUserId) {
+      await activityLogService.create({
+        userId: adminUserId,
+        action: 'user.updated',
+        targetTable: 'users',
+        targetId: String(userId),
+        ipAddress: loggingOptions?.ipAddress,
+        userAgent: loggingOptions?.userAgent,
+      });
+    }
+
     const row = result.rows[0] as { createdAt?: string };
     return {
       ...result.rows[0],
@@ -114,11 +140,24 @@ export const userService = {
     };
   },
 
-  async removeUser(userId: number) {
+  async removeUser(userId: number, adminUserId?: number, loggingOptions?: { ipAddress?: string; userAgent?: string }) {
     const result = await pool.query('DELETE FROM users WHERE user_id = $1 RETURNING user_id', [userId]);
     if (result.rowCount !== 1) {
       throw new ApiError(404, 'User tidak ditemukan');
     }
+
+    // Log activity
+    if (adminUserId) {
+      await activityLogService.create({
+        userId: adminUserId,
+        action: 'user.deleted',
+        targetTable: 'users',
+        targetId: String(userId),
+        ipAddress: loggingOptions?.ipAddress,
+        userAgent: loggingOptions?.userAgent,
+      });
+    }
+
     return { userId };
   },
 };

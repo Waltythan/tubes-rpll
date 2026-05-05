@@ -1,9 +1,10 @@
-import express, { NextFunction, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { jwtAuth, AuthRequest } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { payrollService } from '../services/payrollService';
 import { sendResponse } from '../utils/apiResponse';
 import { parseWithSchema, payrollAdjustmentSchema, payrollGenerateSchema, positiveIntSchema } from '../utils/requestValidation';
+import { extractClientIp } from '../utils/ipCheck';
 
 const router = express.Router();
 
@@ -13,7 +14,14 @@ router.post('/generate', requireRoles('admin'), async (req: AuthRequest, res: Re
   try {
     const payload = parseWithSchema(payrollGenerateSchema, req.body || {});
     const period = payload.period ? new Date(`${payload.period}T00:00:00.000Z`) : new Date();
-    const result = await payrollService.generateMonthlyPayroll(period);
+    const clientIp = extractClientIp(req as Request);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    const result = await payrollService.generateMonthlyPayroll(
+      period,
+      parseWithSchema(positiveIntSchema, req.user!.id),
+      { ipAddress: clientIp, userAgent: userAgent }
+    );
     sendResponse(res, 200, 'Payroll generated', result);
   } catch (error) {
     next(error);
@@ -24,6 +32,8 @@ router.post('/:payrollId/items', requireRoles('admin'), async (req: AuthRequest,
   try {
     const payrollId = parseWithSchema(positiveIntSchema, req.params.payrollId);
     const payload = parseWithSchema(payrollAdjustmentSchema, req.body);
+    const clientIp = extractClientIp(req as Request);
+    const userAgent = req.headers['user-agent'] as string | undefined;
 
     const result = await payrollService.addAdjustment({
       payrollId,
@@ -31,6 +41,9 @@ router.post('/:payrollId/items', requireRoles('admin'), async (req: AuthRequest,
       amount: payload.amount,
       description: payload.description,
       referenceId: payload.referenceId,
+      adminUserId: parseWithSchema(positiveIntSchema, req.user!.id),
+      ipAddress: clientIp,
+      userAgent: userAgent,
     });
 
     sendResponse(res, 201, 'Payroll adjustment added', result);

@@ -1,5 +1,6 @@
 import pool from './db';
 import { ApiError } from '../utils/apiError';
+import { activityLogService } from './activityLogService';
 
 async function recalculatePayrollTotals(client: { query: Function }, params: {
   payrollId: number;
@@ -70,7 +71,7 @@ function lastDayOfMonth(date: Date) {
 }
 
 export const payrollService = {
-  async generateMonthlyPayroll(period: Date) {
+  async generateMonthlyPayroll(period: Date, adminUserId?: number, loggingOptions?: { ipAddress?: string; userAgent?: string }) {
     const periodStart = firstDayOfMonth(period).toISOString().slice(0, 10);
     const periodEnd = lastDayOfMonth(period).toISOString().slice(0, 10);
 
@@ -133,6 +134,19 @@ export const payrollService = {
       }
 
       await client.query('COMMIT');
+
+      // Log activity after successful transaction
+      if (adminUserId) {
+        await activityLogService.create({
+          userId: adminUserId,
+          action: 'payroll.generated',
+          targetTable: 'payrolls',
+          targetId: `${periodStart}_to_${periodEnd}`,
+          ipAddress: loggingOptions?.ipAddress,
+          userAgent: loggingOptions?.userAgent,
+        });
+      }
+
       return {
         periodStart,
         periodEnd,
@@ -165,6 +179,9 @@ export const payrollService = {
     amount: number;
     description?: string;
     referenceId?: string;
+    adminUserId?: number;
+    ipAddress?: string;
+    userAgent?: string;
   }) {
     const client = await pool.connect();
     try {
@@ -226,6 +243,19 @@ export const payrollService = {
       });
 
       await client.query('COMMIT');
+
+      // Log activity after successful transaction
+      if (params.adminUserId) {
+        await activityLogService.create({
+          userId: params.adminUserId,
+          action: `payroll.adjustment.${params.type}.added`,
+          targetTable: 'payroll_items',
+          targetId: String(itemResult.rows[0].id),
+          ipAddress: params.ipAddress,
+          userAgent: params.userAgent,
+        });
+      }
+
       return {
         item: itemResult.rows[0],
         payroll: recalculated,

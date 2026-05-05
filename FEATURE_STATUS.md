@@ -60,27 +60,27 @@
 
 ### List Users
 - **Backend API:** ✅ `GET /users`
-- **Frontend UI:** ❌ No admin users page
-- **Status:** ⚠️ PARTIAL
-- **Risk:** Cannot manage users from UI
+- **Frontend UI:** ✅ Admin users page (list, create, edit, delete)
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe — Admins can manage users via the UI
 
 ### Create User
 - **Backend API:** ✅ `POST /users`
-- **Frontend UI:** ❌ No form
-- **Status:** ⚠️ PARTIAL
-- **Workaround:** Use curl/Postman
+- **Frontend UI:** ✅ In-page create form available to Admins
+- **Status:** ✅ COMPLETE
+- **Note:** Ensure required fields (department/baseSalary) are provided per backend validation
 
 ### Update User
 - **Backend API:** ✅ `PATCH /users/:userId`
-- **Frontend UI:** ❌ No form
-- **Status:** ⚠️ PARTIAL
-- **Workaround:** Use API
+- **Frontend UI:** ✅ Edit user form in Admin users page
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe
 
 ### Delete User
 - **Backend API:** ✅ `DELETE /users/:userId`
-- **Frontend UI:** ❌ No UI
-- **Status:** ⚠️ PARTIAL
-- **Workaround:** Use API
+- **Frontend UI:** ✅ Delete action available in Admin users page
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe
 
 ---
 
@@ -150,13 +150,17 @@
 - **Frontend UI:** ❌ No manager view
 - **Status:** ⚠️ PARTIAL
 - **Risk:** Managers can't see team leaves in UI
+### View Team Requests
+- **Backend API:** ✅ `GET /leaves/team`
+- **Frontend UI:** ✅ Manager team view (approvals list)
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe — Managers can view team leave requests
 
 ### Approve/Reject
 - **Backend API:** ✅ `PATCH /leaves/:id/decision`
-- **Frontend UI:** ❌ No approval interface
-- **Status:** ❌ NOT IMPLEMENTED
-- **Risk:** Workflow looks incomplete in demo
-- **Workaround:** Use curl to approve
+- **Frontend UI:** ✅ Leave approval UI for managers/admins
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe — Approve/reject actions available in UI
 
 ---
 
@@ -182,13 +186,17 @@
 - **Frontend UI:** ❌ No manager view
 - **Status:** ⚠️ PARTIAL
 - **Risk:** Managers can't see team reimbursements
+### View Team Requests
+- **Backend API:** ✅ `GET /reimbursements/team`
+- **Frontend UI:** ✅ Manager team view (approvals list)
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe — Managers can view team reimbursements
 
 ### Approve/Reject
 - **Backend API:** ✅ `PATCH /reimbursements/:id/decision`
-- **Frontend UI:** ❌ No approval interface
-- **Status:** ❌ NOT IMPLEMENTED
-- **Risk:** Workflow incomplete
-- **Workaround:** Use curl
+- **Frontend UI:** ✅ Reimbursement approval UI for managers/admins
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe — Approve/reject actions available in UI
 
 ---
 
@@ -254,6 +262,13 @@
 - **Workaround:** Query database directly or use curl
 - **Demo Risk:** Can't show audit trail visually
 
+### View Activity Logs
+- **Backend API:** ✅ `GET /activity-logs?limit=50&offset=0&userId=X&action=X`
+- **Frontend UI:** ✅ Admin activity logs page
+- **Features:** Comprehensive logging of all actions
+- **Status:** ✅ COMPLETE
+- **Demo:** Safe — Admins can view recent activity via UI
+
 ---
 
 ## 9. ROLES & PERMISSIONS (3/3 roles)
@@ -263,12 +278,22 @@
 - **Frontend Support:** ⚠️ Partial (only payroll page)
 - **Status:** ⚠️ PARTIAL
 - **Gap:** No user management UI, no logs viewer
+### Admin Role
+- **Can:** Create/delete users, edit attendance, view logs, generate payroll
+- **Frontend Support:** ⚠️ Partial (users & logs implemented; payroll generation UI still missing)
+- **Status:** ⚠️ PARTIAL
+- **Note:** Admin user management and activity logs UI implemented; payroll UI remains
 
 ### Manager Role
 - **Can:** View team attendance/leave/reimbursement, approve requests
 - **Frontend Support:** ❌ Missing team views and approval UIs
 - **Status:** ❌ NOT IMPLEMENTED
 - **Gap:** No team dashboard, no approval interface
+### Manager Role
+- **Can:** View team attendance/leave/reimbursement, approve requests
+- **Frontend Support:** ✅ Manager views and approval UIs implemented
+- **Status:** ✅ COMPLETE
+- **Demo:** Managers can view and decide team leave/reimbursement requests
 
 ### Staff Role
 - **Can:** Request leave/reimbursement, view own attendance
@@ -358,16 +383,10 @@ These endpoints work via API but have no frontend UI:
 1. `POST /users` - Create user
 2. `PATCH /users/:userId` - Update user
 3. `DELETE /users/:userId` - Delete user
-4. `GET /attendance/team` - Team attendance (manager)
-5. `PATCH /attendance/:id` - Edit attendance (admin)
-6. `GET /leaves/team` - Team leaves (manager)
-7. `PATCH /leaves/:id/decision` - Approve leave (manager)
-8. `GET /reimbursements/team` - Team reimbursements (manager)
-9. `PATCH /reimbursements/:id/decision` - Approve reimbursement (manager)
-10. `POST /payroll/generate` - Generate payroll (admin)
-11. `POST /payroll/:payrollId/items` - Add payroll adjustment (admin)
-12. `GET /activity-logs` - View logs (admin)
-13. `PATCH /profiles/:userId` - Admin update profile
+4. `PATCH /attendance/:id` - Edit attendance (admin)
+5. `POST /payroll/generate` - Generate payroll (admin)
+6. `POST /payroll/:payrollId/items` - Add payroll adjustment (admin)
+7. `PATCH /profiles/:userId` - Admin update profile
 
 ---
 

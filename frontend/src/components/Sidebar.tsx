@@ -36,6 +36,7 @@ export default function Sidebar(_: SidebarProps): JSX.Element {
             <div className="sidebar-section-label">
               Approvals
             </div>
+            <NavLink to="/org-chart" className={navLinkClass}><span className="nav-icon">T</span><span className="nav-label">Management Tree</span></NavLink>
             <NavLink to="/approvals/leaves" className={navLinkClass}><span className="nav-icon">L</span><span className="nav-label">Leave Approvals</span></NavLink>
             <NavLink to="/approvals/reimbursements" className={navLinkClass}><span className="nav-icon">E</span><span className="nav-label">Reimbursement Approvals</span></NavLink>
           </>

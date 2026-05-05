@@ -10,6 +10,7 @@ type LoginResult = {
     email: string;
     role: UserRole;
     managerId: number | null;
+    departmentId: number | null;
   };
 };
 
@@ -31,7 +32,7 @@ async function logFailedLoginAttempt(email: string, clientIp?: string) {
 export const authService = {
   async login(email: string, password: string, clientIp?: string): Promise<LoginResult> {
     const result = await pool.query(
-      `SELECT user_id, email, password, role, manager_id
+      `SELECT user_id, email, password, role, manager_id, department_id
        FROM users
        WHERE email = $1
        LIMIT 1`,
@@ -49,6 +50,7 @@ export const authService = {
       password: string;
       role: UserRole;
       manager_id: number | null;
+      department_id: number | null;
     };
 
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -61,6 +63,7 @@ export const authService = {
       id: String(user.user_id),
       role: user.role,
       managerId: user.manager_id ? String(user.manager_id) : null,
+      departmentId: user.department_id ? String(user.department_id) : null,
     });
 
     return {
@@ -70,6 +73,7 @@ export const authService = {
         email: user.email,
         role: user.role,
         managerId: user.manager_id,
+        departmentId: user.department_id,
       },
     };
   },

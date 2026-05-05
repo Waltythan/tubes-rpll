@@ -10,6 +10,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import Leave from './pages/Leave'
 import LeaveApprovals from './pages/LeaveApprovals'
 import Login from './pages/Login'
+import OrgChart from './pages/OrgChart'
 import Payroll from './pages/Payroll'
 import Profile from './pages/Profile'
 import Reimbursement from './pages/Reimbursement'
@@ -43,6 +44,7 @@ export default function App(): JSX.Element {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/leave" element={<Leave />} />
           <Route path="/reimbursement" element={<Reimbursement />} />
+          <Route path="/org-chart" element={<ProtectedRoute allowedRoles={['manager', 'admin']}><OrgChart /></ProtectedRoute>} />
           <Route path="/approvals/leaves" element={<ProtectedRoute allowedRoles={['manager', 'admin']}><LeaveApprovals /></ProtectedRoute>} />
           <Route path="/approvals/reimbursements" element={<ProtectedRoute allowedRoles={['manager', 'admin']}><ReimbursementApprovals /></ProtectedRoute>} />
         </Route>

@@ -3,6 +3,9 @@ import api from './api'
 export interface AuthUser {
   id: number
   email: string
+  managerId?: number | null
+  departmentId?: number | null
+  department_id?: number | null
   name?: string | null
   fullName?: string | null
   full_name?: string | null

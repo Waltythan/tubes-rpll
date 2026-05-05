@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Card from '../components/Card'
 import Badge from '../components/common/Badge'
 import { useAuth } from '../hooks/useAuth'
-import { hrService, type LeaveItem, type ReimbursementItem } from '../services/hrService'
+import { hrService, type LeaveItem, type ReimbursementItem, type UserItem } from '../services/hrService'
 
 interface MetricCardProps {
   icon: string
@@ -46,12 +46,18 @@ function MetricCard({ icon, iconClass, title, value, description, loading }: Met
 
 export default function Dashboard(): JSX.Element {
   const { user, loading: authLoading } = useAuth()
+  const role = String(user?.role || user?.roles || 'staff').toLowerCase()
+  const userId = Number(user?.id || 0) || null
+  const departmentId = Number(user?.departmentId || user?.department_id || 0) || null
+  const canApprove = role === 'manager' || role === 'admin'
   const [attendanceThisMonth, setAttendanceThisMonth] = useState<number | null>(null)
   const [lateCount, setLateCount] = useState<number | null>(null)
   const [leaveRemaining, setLeaveRemaining] = useState<number | null>(null)
   const [reimbursePending, setReimbursePending] = useState<number | null>(null)
   const [latestLeave, setLatestLeave] = useState<LeaveItem | null>(null)
   const [latestReimbursement, setLatestReimbursement] = useState<ReimbursementItem | null>(null)
+  const [teamCount, setTeamCount] = useState<number | null>(null)
+  const [pendingApprovals, setPendingApprovals] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -103,9 +109,49 @@ export default function Dashboard(): JSX.Element {
       }
     }
 
+    async function loadTeamSnapshot(): Promise<void> {
+      if (!canApprove) {
+        return
+      }
+
+      try {
+        const [users, leaves, reimbursements] = await Promise.all([
+          hrService.getUsers(),
+          hrService.teamLeaves(),
+          hrService.teamReimbursements(),
+        ])
+        if (!active) return
+
+        const teamMembers = (users as UserItem[]).filter((item) => {
+          const itemId = Number(item.user_id || item.id || 0) || null
+          if (itemId == null || itemId === userId) {
+            return false
+          }
+
+          const itemManagerId = Number(item.manager_id || item.managerId || 0) || null
+          const itemDepartmentId = Number(item.department_id || 0) || null
+          const directReport = userId != null && itemManagerId === userId
+          const sameDepartment = departmentId != null && itemDepartmentId === departmentId
+
+          return directReport || sameDepartment
+        })
+
+        const pendingLeaves = leaves.filter((item) => String(item.status || '').toLowerCase() === 'pending').length
+        const pendingReimbursements = reimbursements.filter((item) => String(item.status || '').toLowerCase() === 'pending').length
+
+        setTeamCount(teamMembers.length)
+        setPendingApprovals(pendingLeaves + pendingReimbursements)
+      } catch (err: unknown) {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Failed to load team metrics')
+        }
+      }
+    }
+
     void loadAttendance()
     void loadLeaves()
     void loadReimbursements()
+    void loadTeamSnapshot()
 
     return () => {
       active = false
@@ -135,6 +181,27 @@ export default function Dashboard(): JSX.Element {
         <MetricCard icon="🌴" iconClass="metric-icon-green" title="Leave remaining" value={leaveRemaining ?? leaveAllowance} description="Configured annual allowance minus approved leave days." loading={leaveRemaining === null} />
         <MetricCard icon="💸" iconClass="metric-icon-violet" title="Reimburse pending" value={reimbursePending ?? 0} description="Expenses waiting for approval." loading={reimbursePending === null} />
       </section>
+
+      {canApprove && (
+        <section className="grid grid-2">
+          <MetricCard
+            icon="👥"
+            iconClass="metric-icon-blue"
+            title="My team"
+            value={teamCount ?? 0}
+            description="Members in your reporting line or department."
+            loading={teamCount === null}
+          />
+          <MetricCard
+            icon="🗂"
+            iconClass="metric-icon-amber"
+            title="Pending approvals"
+            value={pendingApprovals ?? 0}
+            description="Pending leave and reimbursement decisions."
+            loading={pendingApprovals === null}
+          />
+        </section>
+      )}
 
       <section className="grid grid-2">
         <Card>

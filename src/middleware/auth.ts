@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
     id: string;
     role: UserRole;
     managerId?: string | null;
+    departmentId?: string | null;
   };
 }
 
@@ -33,6 +34,7 @@ export function jwtAuth(req: AuthRequest, res: Response, next: NextFunction) {
     id: String(payload.sub || payload.id),
     role: (payload.role || 'staff') as UserRole,
     managerId: payload.managerId ? String(payload.managerId) : null,
+    departmentId: payload.departmentId ? String(payload.departmentId) : null,
   };
   next();
 }

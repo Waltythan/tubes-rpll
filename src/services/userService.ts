@@ -34,18 +34,84 @@ async function validateManagerAssignment(userId: number | null | undefined, mana
   }
 
   const manager = managerResult.rows[0] as { user_id: number; role: string };
-  if (manager.role !== 'manager') {
-    throw new ApiError(400, 'Manager harus memiliki role manager');
+  if (!['manager', 'admin'].includes(manager.role)) {
+    throw new ApiError(400, 'Manager harus memiliki role manager atau admin');
+  }
+
+  if (userId != null) {
+    const cycleCheck = await pool.query(
+      `WITH RECURSIVE manager_chain AS (
+         SELECT user_id, manager_id
+         FROM users
+         WHERE user_id = $1
+
+         UNION ALL
+
+         SELECT u.user_id, u.manager_id
+         FROM users u
+         JOIN manager_chain c ON c.manager_id = u.user_id
+       )
+       SELECT 1
+       FROM manager_chain
+       WHERE user_id = $2
+       LIMIT 1`,
+      [managerId, userId]
+    );
+
+    if (cycleCheck.rowCount === 1) {
+      throw new ApiError(400, 'Manager assignment tidak valid: menyebabkan siklus hirarki');
+    }
   }
 }
 
 export const userService = {
   async listUsers() {
     const result = await pool.query(
-      `SELECT user_id, department_id, email, role, base_salary, manager_id, "createdAt" AS created_at
-       FROM users
-       ORDER BY user_id ASC`
+      `SELECT u.user_id,
+              u.department_id,
+              d.name AS department_name,
+              d.code AS department_code,
+              u.email,
+              p.full_name,
+              u.role,
+              u.base_salary,
+              u.manager_id,
+              m.email AS manager_email,
+              u."createdAt" AS created_at
+       FROM users u
+       LEFT JOIN departments d ON d.dep_id = u.department_id
+       LEFT JOIN profiles p ON p.user_id = u.user_id
+       LEFT JOIN users m ON m.user_id = u.manager_id
+       ORDER BY u.user_id ASC`
     );
+    return result.rows;
+  },
+
+  async listManagers() {
+    const result = await pool.query(
+      `SELECT u.user_id,
+              u.department_id,
+              d.name AS department_name,
+              u.email,
+              p.full_name,
+              u.role
+       FROM users u
+       LEFT JOIN departments d ON d.dep_id = u.department_id
+       LEFT JOIN profiles p ON p.user_id = u.user_id
+       WHERE u.role IN ('manager', 'admin')
+       ORDER BY u.user_id ASC`
+    );
+
+    return result.rows;
+  },
+
+  async listDepartments() {
+    const result = await pool.query(
+      `SELECT dep_id, name, code
+       FROM departments
+       ORDER BY name ASC`
+    );
+
     return result.rows;
   },
 

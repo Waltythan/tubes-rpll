@@ -8,9 +8,9 @@ import { extractClientIp } from '../utils/ipCheck';
 
 const router = express.Router();
 
-router.use(jwtAuth, requireRoles('admin'));
+router.use(jwtAuth);
 
-router.get('/', async (_req: AuthRequest, res: Response, next: NextFunction) => {
+router.get('/', requireRoles('admin', 'manager'), async (_req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const rows = await userService.listUsers();
     sendResponse(res, 200, 'Users fetched', rows);
@@ -19,7 +19,25 @@ router.get('/', async (_req: AuthRequest, res: Response, next: NextFunction) => 
   }
 });
 
-router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.get('/managers', requireRoles('admin', 'manager'), async (_req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const rows = await userService.listManagers();
+    sendResponse(res, 200, 'Managers fetched', rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/departments', requireRoles('admin', 'manager'), async (_req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const rows = await userService.listDepartments();
+    sendResponse(res, 200, 'Departments fetched', rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/', requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const clientIp = extractClientIp(req as Request);
     const userAgent = req.headers['user-agent'] as string | undefined;
@@ -35,7 +53,7 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
   }
 });
 
-router.patch('/:userId', async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.patch('/:userId', requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = parseWithSchema(positiveIntSchema, req.params.userId);
     const clientIp = extractClientIp(req as Request);
@@ -54,7 +72,7 @@ router.patch('/:userId', async (req: AuthRequest, res: Response, next: NextFunct
   }
 });
 
-router.delete('/:userId', async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.delete('/:userId', requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = parseWithSchema(positiveIntSchema, req.params.userId);
     const clientIp = extractClientIp(req as Request);

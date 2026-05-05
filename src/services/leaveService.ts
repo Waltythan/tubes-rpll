@@ -12,12 +12,43 @@ type LeaveInput = {
   userAgent?: string;
 };
 
-async function isSubordinate(managerId: number, staffUserId: number): Promise<boolean> {
+const strictDepartmentApproval = String(process.env.STRICT_DEPARTMENT_APPROVAL || '').toLowerCase() === 'true';
+
+async function canManagerApprove(managerId: number, staffUserId: number): Promise<boolean> {
   const result = await pool.query(
-    'SELECT 1 FROM users WHERE user_id = $1 AND manager_id = $2 LIMIT 1',
+    `SELECT requester.user_id,
+            requester.manager_id AS requester_manager_id,
+            requester.department_id AS requester_department_id,
+            manager.user_id AS manager_user_id,
+            manager.department_id AS manager_department_id
+     FROM users requester
+     JOIN users manager ON manager.user_id = $2
+     WHERE requester.user_id = $1
+     LIMIT 1`,
     [staffUserId, managerId]
   );
-  return result.rowCount === 1;
+
+  if (result.rowCount !== 1) {
+    return false;
+  }
+
+  const row = result.rows[0] as {
+    requester_manager_id: number | null;
+    requester_department_id: number | null;
+    manager_user_id: number;
+    manager_department_id: number | null;
+  };
+
+  const directSubordinate = row.requester_manager_id === row.manager_user_id;
+  const sameDepartment = row.requester_department_id != null
+    && row.manager_department_id != null
+    && row.requester_department_id === row.manager_department_id;
+
+  if (strictDepartmentApproval) {
+    return sameDepartment;
+  }
+
+  return directSubordinate || sameDepartment;
 }
 
 export const leaveService = {
@@ -86,9 +117,9 @@ export const leaveService = {
     }
 
     if (params.role === 'manager') {
-      const allowed = await isSubordinate(params.managerId, row.user_id);
+      const allowed = await canManagerApprove(params.managerId, row.user_id);
       if (!allowed) {
-        throw new ApiError(403, 'Manager hanya boleh approve request subordinate sendiri');
+        throw new ApiError(403, 'Manager hanya boleh approve request subordinate langsung atau 1 departemen');
       }
     } else if (params.role !== 'admin') {
       throw new ApiError(403, 'Forbidden');
@@ -131,8 +162,9 @@ export const leaveService = {
   async listTeam(managerId: number, role: 'admin' | 'manager' | 'staff') {
     if (role === 'admin') {
       const all = await pool.query(
-        `SELECT id, user_id, approved_by, start_date, end_date, type, status, attachment_url, "createdAt"
-         FROM leave_requests
+        `SELECT lr.id, lr.user_id, lr.approved_by, lr.start_date, lr.end_date, lr.type, lr.status, lr.attachment_url, lr."createdAt", u.department_id
+         FROM leave_requests lr
+         JOIN users u ON u.user_id = lr.user_id
          ORDER BY "createdAt" DESC`
       );
       return all.rows;
@@ -143,10 +175,19 @@ export const leaveService = {
     }
 
     const team = await pool.query(
-      `SELECT lr.id, lr.user_id, lr.approved_by, lr.start_date, lr.end_date, lr.type, lr.status, lr.attachment_url, lr."createdAt"
+      `SELECT lr.id, lr.user_id, lr.approved_by, lr.start_date, lr.end_date, lr.type, lr.status, lr.attachment_url, lr."createdAt", u.department_id
        FROM leave_requests lr
        JOIN users u ON u.user_id = lr.user_id
-       WHERE u.manager_id = $1
+       JOIN users manager ON manager.user_id = $1
+       WHERE u.user_id <> $1
+         AND (
+           u.manager_id = $1
+           OR (
+             u.department_id IS NOT NULL
+             AND manager.department_id IS NOT NULL
+             AND u.department_id = manager.department_id
+           )
+         )
        ORDER BY lr."createdAt" DESC`,
       [managerId]
     );

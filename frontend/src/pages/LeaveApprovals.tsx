@@ -5,6 +5,7 @@ import EmptyState from '../components/common/EmptyState'
 import ErrorAlert from '../components/common/ErrorAlert'
 import StatusBadge from '../components/common/StatusBadge'
 import { showToast } from '../components/common/ToastContainer'
+import { useAuth } from '../hooks/useAuth'
 import { hrService, type LeaveItem } from '../services/hrService'
 
 function formatDate(value?: string): string {
@@ -21,15 +22,29 @@ function formatDate(value?: string): string {
 }
 
 export default function LeaveApprovals(): JSX.Element {
+  const { user } = useAuth()
+  const role = String(user?.role || user?.roles || 'staff').toLowerCase()
+  const approverDepartmentId = Number(user?.departmentId || user?.department_id || 0) || null
+  const isApprover = role === 'manager' || role === 'admin'
+
   const [items, setItems] = useState<LeaveItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<number | null>(null)
 
-  const pendingItems = useMemo(
-    () => items.filter((item) => String(item.status || 'pending').toLowerCase() === 'pending'),
-    [items]
-  )
+  const pendingItems = useMemo(() => {
+    return items.filter((item) => {
+      if (String(item.status || 'pending').toLowerCase() !== 'pending') {
+        return false
+      }
+
+      if (approverDepartmentId != null) {
+        return item.department_id === approverDepartmentId
+      }
+
+      return true
+    })
+  }, [approverDepartmentId, items])
 
   useEffect(() => {
     let active = true
@@ -53,12 +68,16 @@ export default function LeaveApprovals(): JSX.Element {
       }
     }
 
-    void load()
+    if (isApprover) {
+      void load()
+    } else {
+      setLoading(false)
+    }
 
     return () => {
       active = false
     }
-  }, [])
+  }, [isApprover])
 
   async function refresh(): Promise<void> {
     const data = await hrService.teamLeaves()
@@ -99,7 +118,11 @@ export default function LeaveApprovals(): JSX.Element {
 
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
-      {loading ? (
+      {!isApprover ? (
+        <Card>
+          <p className="muted">You do not have permission to access this page.</p>
+        </Card>
+      ) : loading ? (
         <Card>
           <div className="approval-loading">
             <p className="card-title">Loading team requests...</p>

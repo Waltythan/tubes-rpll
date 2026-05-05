@@ -5,6 +5,7 @@ import EmptyState from '../components/common/EmptyState'
 import ErrorAlert from '../components/common/ErrorAlert'
 import StatusBadge from '../components/common/StatusBadge'
 import { showToast } from '../components/common/ToastContainer'
+import { useAuth } from '../hooks/useAuth'
 import { hrService, type ReimbursementItem } from '../services/hrService'
 
 function formatCurrency(value?: number | string): string {
@@ -33,14 +34,30 @@ function formatDate(value?: string): string {
 }
 
 export default function ReimbursementApprovals(): JSX.Element {
+  const { user } = useAuth()
   const [items, setItems] = useState<ReimbursementItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<number | null>(null)
 
   const pendingItems = useMemo(
-    () => items.filter((item) => String(item.status || 'pending').toLowerCase() === 'pending'),
-    [items]
+    () => {
+      const role = String(user?.role || user?.roles || 'staff').toLowerCase()
+      const approverDepartmentId = Number(user?.departmentId || user?.department_id || 0) || null
+
+      return items.filter((item) => {
+        if (String(item.status || 'pending').toLowerCase() !== 'pending') {
+          return false
+        }
+
+        if ((role === 'manager' || role === 'admin') && approverDepartmentId != null) {
+          return item.department_id === approverDepartmentId
+        }
+
+        return true
+      })
+    },
+    [items, user?.departmentId, user?.department_id, user?.role, user?.roles]
   )
 
   useEffect(() => {
@@ -111,7 +128,11 @@ export default function ReimbursementApprovals(): JSX.Element {
 
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
-      {loading ? (
+      {!['manager', 'admin'].includes(String(user?.role || user?.roles || 'staff').toLowerCase()) ? (
+        <Card>
+          <p className="muted">You do not have permission to access this page.</p>
+        </Card>
+      ) : loading ? (
         <Card>
           <div className="approval-loading">
             <p className="card-title">Loading team requests...</p>

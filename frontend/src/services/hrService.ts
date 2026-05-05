@@ -18,6 +18,7 @@ export interface AttendanceItem {
 export interface LeaveItem {
   id: number
   user_id?: number
+  department_id?: number | null
   approved_by?: number | null
   type?: string
   status?: string
@@ -37,6 +38,7 @@ export interface CreateLeaveRequestInput {
 export interface ReimbursementItem {
   id: number
   user_id?: number
+  department_id?: number | null
   approved_by?: number | null
   payroll_id?: number | null
   title?: string
@@ -59,6 +61,27 @@ export interface PayrollItem {
   period_end?: string
   net_salary?: number | string
   status?: string
+}
+
+export interface UserItem {
+  id?: number
+  user_id?: number
+  email?: string
+  role?: string
+  roles?: string
+  department_id?: number | null
+  department_name?: string | null
+  manager_id?: number | null
+  managerId?: number | null
+  name?: string | null
+  full_name?: string | null
+  fullName?: string | null
+}
+
+export interface DepartmentItem {
+  dep_id: number
+  name: string
+  code: string
 }
 
 async function getData<T>(path: string): Promise<T> {
@@ -104,7 +127,9 @@ export const hrService = {
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
 
   // Admin user management
-  getUsers: () => getData<any[]>('/users'),
+  getUsers: () => getData<UserItem[]>('/users'),
+  getManagers: () => getData<UserItem[]>('/users/managers'),
+  getDepartments: () => getData<DepartmentItem[]>('/users/departments'),
   createUser: (data: Record<string, unknown>) => postData<any>('/users', data),
   updateUser: (userId: number, data: Record<string, unknown>) => patchData<any>(`/users/${userId}`, data),
   deleteUser: async (userId: number) => {

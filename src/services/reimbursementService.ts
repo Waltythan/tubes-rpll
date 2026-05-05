@@ -2,12 +2,43 @@ import pool from './db';
 import { ApiError } from '../utils/apiError';
 import { activityLogService } from './activityLogService';
 
-async function isSubordinate(managerId: number, staffUserId: number): Promise<boolean> {
+const strictDepartmentApproval = String(process.env.STRICT_DEPARTMENT_APPROVAL || '').toLowerCase() === 'true';
+
+async function canManagerApprove(managerId: number, staffUserId: number): Promise<boolean> {
   const result = await pool.query(
-    'SELECT 1 FROM users WHERE user_id = $1 AND manager_id = $2 LIMIT 1',
+    `SELECT requester.user_id,
+            requester.manager_id AS requester_manager_id,
+            requester.department_id AS requester_department_id,
+            manager.user_id AS manager_user_id,
+            manager.department_id AS manager_department_id
+     FROM users requester
+     JOIN users manager ON manager.user_id = $2
+     WHERE requester.user_id = $1
+     LIMIT 1`,
     [staffUserId, managerId]
   );
-  return result.rowCount === 1;
+
+  if (result.rowCount !== 1) {
+    return false;
+  }
+
+  const row = result.rows[0] as {
+    requester_manager_id: number | null;
+    requester_department_id: number | null;
+    manager_user_id: number;
+    manager_department_id: number | null;
+  };
+
+  const directSubordinate = row.requester_manager_id === row.manager_user_id;
+  const sameDepartment = row.requester_department_id != null
+    && row.manager_department_id != null
+    && row.requester_department_id === row.manager_department_id;
+
+  if (strictDepartmentApproval) {
+    return sameDepartment;
+  }
+
+  return directSubordinate || sameDepartment;
 }
 
 export const reimbursementService = {
@@ -69,9 +100,9 @@ export const reimbursementService = {
     }
 
     if (params.role === 'manager') {
-      const allowed = await isSubordinate(params.approverId, row.user_id);
+      const allowed = await canManagerApprove(params.approverId, row.user_id);
       if (!allowed) {
-        throw new ApiError(403, 'Manager hanya boleh approve reimbursement subordinate sendiri');
+        throw new ApiError(403, 'Manager hanya boleh approve reimbursement subordinate langsung atau 1 departemen');
       }
     } else if (params.role !== 'admin') {
       throw new ApiError(403, 'Forbidden');
@@ -114,8 +145,9 @@ export const reimbursementService = {
   async listTeam(managerId: number, role: 'admin' | 'manager' | 'staff') {
     if (role === 'admin') {
       const all = await pool.query(
-        `SELECT id, user_id, approved_by, payroll_id, title, description, amount, attachment_url, status, request_date
-         FROM reimbursements
+        `SELECT r.id, r.user_id, r.approved_by, r.payroll_id, r.title, r.description, r.amount, r.attachment_url, r.status, r.request_date, u.department_id
+         FROM reimbursements r
+         JOIN users u ON u.user_id = r.user_id
          ORDER BY request_date DESC`
       );
       return all.rows;
@@ -126,10 +158,19 @@ export const reimbursementService = {
     }
 
     const team = await pool.query(
-      `SELECT r.id, r.user_id, r.approved_by, r.payroll_id, r.title, r.description, r.amount, r.attachment_url, r.status, r.request_date
+      `SELECT r.id, r.user_id, r.approved_by, r.payroll_id, r.title, r.description, r.amount, r.attachment_url, r.status, r.request_date, u.department_id
        FROM reimbursements r
        JOIN users u ON u.user_id = r.user_id
-       WHERE u.manager_id = $1
+       JOIN users manager ON manager.user_id = $1
+       WHERE u.user_id <> $1
+         AND (
+           u.manager_id = $1
+           OR (
+             u.department_id IS NOT NULL
+             AND manager.department_id IS NOT NULL
+             AND u.department_id = manager.department_id
+           )
+         )
        ORDER BY r.request_date DESC`,
       [managerId]
     );

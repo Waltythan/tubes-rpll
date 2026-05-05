@@ -8,6 +8,7 @@ export type AccessTokenPayload = {
   id: string;
   role: UserRole;
   managerId?: string | null;
+  departmentId?: string | null;
 };
 
 export const generateToken = (userId: string) => {

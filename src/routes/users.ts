@@ -1,10 +1,11 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { jwtAuth, AuthRequest } from '../middleware/auth';
+import { AuthRequest, jwtAuth } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { userService } from '../services/userService';
+import { ApiError } from '../utils/apiError';
 import { sendResponse } from '../utils/apiResponse';
-import { parseWithSchema, userCreateSchema, userUpdateSchema, positiveIntSchema } from '../utils/requestValidation';
 import { extractClientIp } from '../utils/ipCheck';
+import { parseWithSchema, positiveIntSchema, userCreateSchema, userUpdateSchema } from '../utils/requestValidation';
 
 const router = express.Router();
 
@@ -39,12 +40,18 @@ router.get('/departments', requireRoles('admin', 'manager'), async (_req: AuthRe
 
 router.post('/', requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    console.log('POST /users body:', req.body);
+    const body = req.body || {};
+    const creatorId = req.user?.id;
+    if (!creatorId) {
+      throw new ApiError(401, 'Authenticated user id is missing');
+    }
     const clientIp = extractClientIp(req as Request);
     const userAgent = req.headers['user-agent'] as string | undefined;
 
     const created = await userService.createUser(
-      parseWithSchema(userCreateSchema, req.body),
-      parseWithSchema(positiveIntSchema, req.user!.id),
+      parseWithSchema(userCreateSchema, body),
+      parseWithSchema(positiveIntSchema, creatorId),
       { ipAddress: clientIp, userAgent: userAgent }
     );
     sendResponse(res, 201, 'User created', created);
@@ -58,11 +65,14 @@ router.patch('/:userId', requireRoles('admin'), async (req: AuthRequest, res: Re
     const userId = parseWithSchema(positiveIntSchema, req.params.userId);
     const clientIp = extractClientIp(req as Request);
     const userAgent = req.headers['user-agent'] as string | undefined;
+    const body = req.body || {};
+    const updaterId = req.user?.id;
+    if (!updaterId) throw new ApiError(401, 'Authenticated user id is missing');
 
     const updated = await userService.updateUser(
       userId,
-      parseWithSchema(userUpdateSchema, req.body),
-      parseWithSchema(positiveIntSchema, req.user!.id),
+      parseWithSchema(userUpdateSchema, body),
+      parseWithSchema(positiveIntSchema, updaterId),
       { ipAddress: clientIp, userAgent: userAgent }
     );
 
@@ -77,10 +87,12 @@ router.delete('/:userId', requireRoles('admin'), async (req: AuthRequest, res: R
     const userId = parseWithSchema(positiveIntSchema, req.params.userId);
     const clientIp = extractClientIp(req as Request);
     const userAgent = req.headers['user-agent'] as string | undefined;
+    const deleterId = req.user?.id;
+    if (!deleterId) throw new ApiError(401, 'Authenticated user id is missing');
 
     const result = await userService.removeUser(
       userId,
-      parseWithSchema(positiveIntSchema, req.user!.id),
+      parseWithSchema(positiveIntSchema, deleterId),
       { ipAddress: clientIp, userAgent: userAgent }
     );
     sendResponse(res, 200, 'User deleted', result);

@@ -74,32 +74,44 @@ export default function ForgotPassword(): JSX.Element {
             </div>
           </div>
 
-          <div className="alert alert-info">
-            Step 1: enter your email. Step 2: in development, you will be redirected with a reset token. Step 3: set a new password.
-          </div>
+          <div className="recovery-grid">
+            <div className="recovery-desc">
+              <p className="eyebrow">Account recovery</p>
+              <h3>Forgot password</h3>
+              <p className="muted">Enter your email and we'll send a reset token. In development you'll be redirected automatically to the reset page.</p>
 
-          <form className="form-grid" onSubmit={submit}>
-            <Input
-              label="Email"
-              type="email"
-              placeholder="name@company.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={submitting}
-              helperText={emailError || 'Use your company email address'}
-            />
-
-            {apiError && <div className="alert alert-error">{apiError}</div>}
-            {successMessage && <div className="alert alert-success">{successMessage}</div>}
-
-            <Button type="submit" variant="primary" fullWidth disabled={submitting}>
-              {submitting ? 'Sending...' : 'Send Reset Link'}
-            </Button>
-
-            <div className="auth-links">
-              <Link to="/login">Back to login</Link>
+              <ul className="step-list">
+                <li className="step-item"><div className="step-bullet">1</div><div className="step-copy">Enter your company email</div></li>
+                <li className="step-item"><div className="step-bullet">2</div><div className="step-copy">Receive reset token (dev) or email link</div></li>
+                <li className="step-item"><div className="step-bullet">3</div><div className="step-copy">Set a new password and sign in</div></li>
+              </ul>
             </div>
-          </form>
+
+            <div className="recovery-form">
+              <form className="form-grid" onSubmit={submit}>
+                <Input
+                  label="Email"
+                  type="email"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={submitting}
+                  helperText={emailError || 'Use your company email address'}
+                />
+
+                {apiError && <div className="alert alert-error">{apiError}</div>}
+                {successMessage && <div className="alert alert-success">{successMessage}</div>}
+
+                <Button type="submit" variant="primary" fullWidth disabled={submitting}>
+                  {submitting ? 'Sending...' : 'Send Reset Link'}
+                </Button>
+
+                <div className="auth-links">
+                  <Link to="/login">Back to login</Link>
+                </div>
+              </form>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

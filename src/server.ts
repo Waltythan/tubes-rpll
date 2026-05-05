@@ -5,16 +5,17 @@ import path from 'path';
 // Services import db.ts which creates pool at module load time
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-import express, { Request, Response } from 'express';
 import cors from 'cors';
+import express, { NextFunction, Request, Response } from 'express';
+import activityLogsRouter from './routes/activityLogs';
 import attendanceRouter from './routes/attendance';
 import authRouter from './routes/auth';
-import usersRouter from './routes/users';
-import profilesRouter from './routes/profiles';
 import leavesRouter from './routes/leaves';
-import reimbursementsRouter from './routes/reimbursements';
 import payrollRouter from './routes/payroll';
-import activityLogsRouter from './routes/activityLogs';
+import profilesRouter from './routes/profiles';
+import reimbursementsRouter from './routes/reimbursements';
+import usersRouter from './routes/users';
+import { ApiError } from './utils/apiError';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -50,6 +51,25 @@ app.use('/leaves', leavesRouter);
 app.use('/reimbursements', reimbursementsRouter);
 app.use('/payroll', payrollRouter);
 app.use('/activity-logs', activityLogsRouter);
+
+// Centralized API error handler for non-attendance routes.
+app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    if (error instanceof ApiError) {
+        return res.status(error.statusCode).json({
+            status: 'error',
+            message: error.message || 'Validation failed',
+            errors: error.details ?? undefined,
+            code: error.statusCode,
+        });
+    }
+
+    console.error('Unhandled error:', error);
+    return res.status(500).json({
+        status: 'error',
+        message: 'Internal server error',
+        code: 500,
+    });
+});
 
 // --- 3. DATABASE & SERVER START ---
 // Use Sequelize instance created by the Sequelize CLI models index

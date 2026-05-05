@@ -28,17 +28,17 @@ export const isoDateSchema = z
   .refine(isValidIsoDate, 'Tanggal tidak valid');
 
 export const loginSchema = z.object({
-  email: z.string().trim().email('Format email tidak valid').toLowerCase(),
-  password: z.string().min(8, 'Password minimal 8 karakter'),
+  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
+  password: z.string({ required_error: 'Password is required' }).min(8, 'Password minimal 8 karakter'),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().trim().email('Format email tidak valid').toLowerCase(),
+  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(10, 'Token reset tidak valid'),
-  newPassword: z.string().min(8, 'Password minimal 8 karakter'),
+  token: z.string({ required_error: 'Token is required' }).min(10, 'Token reset tidak valid'),
+  newPassword: z.string({ required_error: 'New password is required' }).min(8, 'Password minimal 8 karakter'),
 });
 
 export const profileUpdateSchema = z.object({
@@ -72,16 +72,18 @@ export const payrollGenerateSchema = z.object({
 
 export const userCreateSchema = z.object({
   departmentId: z.number().int().nullable().optional(),
-  email: z.string().trim().email('Format email tidak valid').toLowerCase(),
-  password: z.string().min(8, 'Password minimal 8 karakter'),
-  role: z.enum(['admin', 'manager', 'staff']),
+  name: z.string({ required_error: 'Name is required' }).trim().min(3, 'Name must be at least 3 characters').max(200, 'Name maksimal 200 karakter'),
+  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
+  password: z.string({ required_error: 'Password is required' }).min(8, 'Password minimal 8 karakter'),
+  role: z.enum(['admin', 'manager', 'staff'], { required_error: 'Role is required' }),
   baseSalary: z.number().nonnegative().optional(),
   managerId: z.number().int().nullable().optional(),
 });
 
 export const userUpdateSchema = z.object({
   departmentId: z.number().int().nullable().optional(),
-  email: z.string().trim().email('Format email tidak valid').toLowerCase().optional(),
+  name: z.string().trim().min(3, 'Name must be at least 3 characters').max(200, 'Name maksimal 200 karakter').optional(),
+  email: z.string().trim().email('Format email tidak valid').transform((s) => s.toLowerCase()).optional(),
   password: z.string().min(8, 'Password minimal 8 karakter').optional(),
   role: z.enum(['admin', 'manager', 'staff']).optional(),
   baseSalary: z.number().nonnegative().optional(),
@@ -128,10 +130,16 @@ export function parseWithSchema<T>(schema: z.ZodType<T>, data: unknown): T {
   const result = schema.safeParse(data);
 
   if (!result.success) {
+    const errors = result.error.issues.map((issue) => ({
+      path: issue.path.join('.'),
+      message: issue.message,
+      code: issue.code,
+    }));
+
     const message = result.error.issues
       .map((issue) => issue.message)
       .join('; ');
-    throw new ApiError(400, message);
+    throw new ApiError(400, message || 'Validation failed', true, errors);
   }
 
   return result.data;

@@ -166,8 +166,12 @@
 
 ### Add Adjustments
 - **Backend API:** ✅ `POST /payroll/:payrollId/items`
-- **Frontend UI:** ❌ No adjustment UI
-- **Status:** ⚠️ PARTIAL
+- **Frontend UI:** ✅ Adjustment UI implemented
+- **Features:**
+	- Add bonus/deduction
+	- Display payroll items
+	- Admin-only access
+- **Status:** ✅ COMPLETE
 
 ### View Own Payroll
 - **Backend API:** ✅ `GET /payroll/me`
@@ -262,7 +266,7 @@
 | Approve/Reject | ✅ | ✅ | ✅ | ✅ |
 | **Payroll** ||||
 | Generate | ✅ | ✅ | ✅ | ✅ |
-| Add Adjustment | ✅ | ❌ | ⚠️ | ❌ |
+| Add Adjustment | ✅ | ✅ | ✅ | ✅ |
 | View Own | ✅ | ⚠️ | ⚠️ | ⚠️ |
 | **Profile** ||||
 | View Own | ✅ | ✅ | ✅ | ✅ |
@@ -284,10 +288,10 @@
 | Attendance | 100% | ✅ Good | ✅ Yes |
 | Leave Management | 100% | ✅ Good | ✅ Yes |
 | Reimbursement | 100% | ✅ Good | ✅ Yes |
-| Payroll | 33% | ⚠️ Low | ❌ No |
+| Payroll | 67% | ⚠️ Partial | ❌ No |
 | Profile Management | 67% | ⚠️ Partial | ✅ Yes |
 | Activity Logs | 100% | ✅ Good | ✅ Yes |
-| **Overall** | **85%** | ✅ Good | ✅ Yes |
+| **Overall** | **89%** | ✅ Good | ✅ Yes |
 
 ---
 
@@ -295,8 +299,7 @@
 
 These endpoints still work via API but do not have a dedicated frontend screen:
 
-1. `POST /payroll/:payrollId/items` - Add payroll adjustment (admin)
-2. `PATCH /profiles/:userId` - Admin update profile
+1. `PATCH /profiles/:userId` - Admin update profile
 
 ---
 

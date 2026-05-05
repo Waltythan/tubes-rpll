@@ -15,6 +15,7 @@ import Profile from './pages/Profile'
 import Reimbursement from './pages/Reimbursement'
 import ReimbursementApprovals from './pages/ReimbursementApprovals'
 import ResetPassword from './pages/ResetPassword'
+import Users from './pages/Users'
 
 export default function App(): JSX.Element {
   const { isAuthenticated } = useAuth()
@@ -55,6 +56,7 @@ export default function App(): JSX.Element {
           }
         >
           <Route path="/payroll" element={<Payroll />} />
+          <Route path="/users" element={<Users />} />
           <Route path="/activity-logs" element={<ActivityLogs />} />
         </Route>
 

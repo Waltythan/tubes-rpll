@@ -99,7 +99,7 @@ export default function Users(): JSX.Element {
     setError(null)
 
     const payload: Record<string, unknown> = {
-      name: nameRef.current?.value || undefined,
+      full_name: nameRef.current?.value || undefined,
       email: emailRef.current?.value || undefined,
       role: roleRef.current?.value || 'staff',
       managerId: managerRef.current?.value ? Number(managerRef.current.value) : null,

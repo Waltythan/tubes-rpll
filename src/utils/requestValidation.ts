@@ -73,6 +73,7 @@ export const payrollGenerateSchema = z.object({
 export const userCreateSchema = z.object({
   departmentId: z.number().int().nullable().optional(),
   email: z.string().trim().email('Format email tidak valid').toLowerCase(),
+  full_name: z.string().trim().min(3).max(200, 'Nama maksimal 200 karakter').optional(),
   password: z.string().min(8, 'Password minimal 8 karakter'),
   role: z.enum(['admin', 'manager', 'staff']),
   baseSalary: z.number().nonnegative().optional(),
@@ -82,6 +83,7 @@ export const userCreateSchema = z.object({
 export const userUpdateSchema = z.object({
   departmentId: z.number().int().nullable().optional(),
   email: z.string().trim().email('Format email tidak valid').toLowerCase().optional(),
+  full_name: z.string().trim().min(3).max(200, 'Nama maksimal 200 karakter').optional(),
   password: z.string().min(8, 'Password minimal 8 karakter').optional(),
   role: z.enum(['admin', 'manager', 'staff']).optional(),
   baseSalary: z.number().nonnegative().optional(),

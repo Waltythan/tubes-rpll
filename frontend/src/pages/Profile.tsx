@@ -16,8 +16,6 @@ interface ProfileData {
   phone_number?: string
   address?: string
   profile_picture_url?: string
-  birth_date?: string
-  bank_account_details?: string
 }
 
 export default function Profile(): JSX.Element {
@@ -53,8 +51,6 @@ export default function Profile(): JSX.Element {
               phone_number: profileData.phone_number || '',
               address: profileData.address || '',
               profile_picture_url: profileData.profile_picture_url || '',
-              birth_date: profileData.birth_date || '',
-              bank_account_details: profileData.bank_account_details || '',
               email: user?.email || '',
             })
             setInitialProfile({
@@ -63,8 +59,6 @@ export default function Profile(): JSX.Element {
               phone_number: profileData.phone_number || '',
               address: profileData.address || '',
               profile_picture_url: profileData.profile_picture_url || '',
-              birth_date: profileData.birth_date || '',
-              bank_account_details: profileData.bank_account_details || '',
               email: user?.email || '',
             })
           } else {
@@ -75,8 +69,6 @@ export default function Profile(): JSX.Element {
               phone_number: '',
               address: '',
               profile_picture_url: '',
-              birth_date: '',
-              bank_account_details: '',
             })
             setInitialProfile({
               full_name: user?.name || user?.fullName || user?.email || '',
@@ -84,8 +76,6 @@ export default function Profile(): JSX.Element {
               phone_number: '',
               address: '',
               profile_picture_url: '',
-              birth_date: '',
-              bank_account_details: '',
             })
           }
         }
@@ -207,26 +197,11 @@ export default function Profile(): JSX.Element {
             />
           </div>
 
-          <div className="grid grid-2">
-            <Input 
-              label="Birth Date" 
-              type="date"
-              value={profile.birth_date || ''} 
-              onChange={(event) => setProfile({ ...profile, birth_date: event.target.value })} 
-            />
-            <Input
-              label="Profile picture URL"
-              placeholder="https://..."
-              value={profile.profile_picture_url || ''}
-              onChange={(event) => setProfile({ ...profile, profile_picture_url: event.target.value })}
-            />
-          </div>
-
           <Input
-            label="Bank Account Details"
-            placeholder="Account information"
-            value={profile.bank_account_details || ''}
-            onChange={(event) => setProfile({ ...profile, bank_account_details: event.target.value })}
+            label="Profile picture URL"
+            placeholder="https://..."
+            value={profile.profile_picture_url || ''}
+            onChange={(event) => setProfile({ ...profile, profile_picture_url: event.target.value })}
           />
 
 

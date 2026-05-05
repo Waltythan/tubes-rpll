@@ -4,7 +4,7 @@ import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
 import { useLoading } from '../hooks/useLoading'
-import { forgotPassword } from '../services/authService'
+import { forgotPassword, getDevResetToken } from '../services/authService'
 
 export default function ForgotPassword(): JSX.Element {
   const navigate = useNavigate()
@@ -42,13 +42,17 @@ export default function ForgotPassword(): JSX.Element {
     setSubmitting(true)
 
     try {
-      const result = await withLoading(() => forgotPassword(email.trim().toLowerCase()))
-      setSuccessMessage('Reset token generated. Redirecting to password reset...')
+      const normalizedEmail = email.trim().toLowerCase()
+      await withLoading(() => forgotPassword(normalizedEmail))
+      setSuccessMessage('If email exists, reset instructions have been sent')
 
-      if (result.resetToken) {
-        window.setTimeout(() => {
-          navigate(`/reset-password?token=${encodeURIComponent(result.resetToken || '')}`, { replace: true })
-        }, 700)
+      if (import.meta.env.DEV) {
+        const result = await withLoading(() => getDevResetToken(normalizedEmail))
+        if (result.resetToken) {
+          window.setTimeout(() => {
+            navigate(`/reset-password?token=${encodeURIComponent(result.resetToken || '')}`, { replace: true })
+          }, 700)
+        }
       }
     } catch (err: unknown) {
       setApiError(err instanceof Error ? err.message : 'Failed to send reset link')

@@ -81,6 +81,17 @@ export interface GeneratePayrollInput {
   year: number
 }
 
+export interface PayrollGenerationResult {
+  periodStart: string
+  periodEnd: string
+  payrollCount: number
+  generatedPayrolls: Array<{
+    userId: number
+    payrollId: number
+    netSalary: number
+  }>
+}
+
 export interface AddPayrollItemInput {
   type: 'allowance' | 'deduction'
   amount: number
@@ -167,7 +178,7 @@ export const hrService = {
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
-  generatePayroll: ({ month, year }: GeneratePayrollInput) => postData<PayrollItem>('/payroll/generate', { month, year }),
+  generatePayroll: ({ month, year }: GeneratePayrollInput) => postData<PayrollGenerationResult>('/payroll/generate', { month, year }),
   addPayrollItem: (payrollId: number, data: AddPayrollItemInput) => postData<PayrollAdjustmentItem>(`/payroll/${payrollId}/items`, {
     type: data.type,
     amount: data.amount,

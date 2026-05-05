@@ -34,8 +34,14 @@ interface BackendResponse<T> {
   data: T
 }
 
-export async function forgotPassword(email: string): Promise<ForgotPasswordResult> {
-  const response = await api.post<BackendResponse<ForgotPasswordResult>>('/auth/forgot', { email })
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post<BackendResponse<null>>('/auth/forgot', { email })
+}
+
+export async function getDevResetToken(email: string): Promise<ForgotPasswordResult> {
+  const response = await api.get<BackendResponse<ForgotPasswordResult>>('/auth/dev/reset-token', {
+    params: { email },
+  })
   return response.data.data || {}
 }
 

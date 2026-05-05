@@ -29,7 +29,23 @@ router.post('/forgot', async (req: Request, res: Response, next: NextFunction) =
     // Do not reveal whether the email exists; service will silently return if not found
     await authService.forgotPassword(email);
 
-    sendResponse(res, 200, 'Jika email terdaftar, instruksi untuk mereset password telah dikirim');
+    sendResponse(res, 200, 'If email exists, reset instructions have been sent');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/dev/reset-token', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if ((process.env.NODE_ENV || 'development') !== 'development') {
+      sendResponse(res, 404, 'Not found');
+      return;
+    }
+
+    const { email } = parseWithSchema(forgotPasswordSchema, { email: req.query?.email });
+    const tokenInfo = authService.getLatestResetToken(email);
+
+    sendResponse(res, 200, 'Reset token fetched', tokenInfo);
   } catch (error) {
     next(error);
   }

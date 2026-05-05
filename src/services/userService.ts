@@ -2,10 +2,13 @@ import pool from './db';
 import { ApiError } from '../utils/apiError';
 import bcrypt from 'bcrypt';
 import { activityLogService } from './activityLogService';
+import { profileService } from './profileService';
 
 type UserCreateInput = {
   departmentId?: number | null;
   email: string;
+  full_name?: string | null;
+  name?: string | null;
   password: string;
   role: 'admin' | 'manager' | 'staff';
   baseSalary?: number;
@@ -119,6 +122,7 @@ export const userService = {
     await validateManagerAssignment(null, input.managerId ?? null);
 
     const hashedPassword = await bcrypt.hash(input.password, 10);
+    const displayName = input.full_name || input.name || null;
 
     const result = await pool.query(
       `INSERT INTO users (department_id, email, password, role, base_salary, manager_id)
@@ -135,6 +139,10 @@ export const userService = {
     );
 
     const row = result.rows[0] as { user_id: number; createdAt?: string };
+
+    if (displayName) {
+      await profileService.upsertProfile(row.user_id, { full_name: displayName }, loggingOptions);
+    }
 
     // Log activity
     if (adminUserId) {
@@ -186,6 +194,11 @@ export const userService = {
         input.managerId ?? null,
       ]
     );
+
+    const displayName = input.full_name || input.name || null;
+    if (displayName) {
+      await profileService.upsertProfile(userId, { full_name: displayName }, loggingOptions);
+    }
 
     // Log activity
     if (adminUserId) {

@@ -2,9 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 
 const OFFICE_IP_PREFIX = process.env.OFFICE_IP_PREFIX || '192.168.';
 
-export function extractClientIp(req: Pick<Request, 'headers' | 'socket'>) {
-  const forwardedFor = req.headers['x-forwarded-for'];
+export function extractClientIp(req: Partial<Pick<Request, 'headers' | 'socket' | 'ip'>>) {
+  // Prioritas: req.ip (diatur oleh Express trust proxy) > x-forwarded-for > socket remoteAddress
+  if (typeof req.ip === 'string' && req.ip.trim().length > 0) {
+    return req.ip.replace(/^::ffff:/, '');
+  }
 
+  const forwardedFor = req.headers['x-forwarded-for'];
   if (typeof forwardedFor === 'string' && forwardedFor.trim().length > 0) {
     return forwardedFor.split(',')[0].trim().replace(/^::ffff:/, '');
   }

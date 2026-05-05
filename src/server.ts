@@ -19,6 +19,9 @@ import activityLogsRouter from './routes/activityLogs';
 const app = express();
 const port = process.env.PORT || 5000;
 
+// --- TRUST PROXY (untuk mengambil IP address yang sebenarnya dari reverse proxy) ---
+app.set('trust proxy', 1);
+
 // --- 1. MIDDLEWARE ---
 app.use(express.json());
 app.use(cors({

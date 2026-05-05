@@ -1,5 +1,6 @@
 import pool from './db';
 import { ApiError } from '../utils/apiError';
+import { activityLogService } from './activityLogService';
 
 type LeaveInput = {
   userId: number;
@@ -7,6 +8,8 @@ type LeaveInput = {
   endDate: string;
   type: string;
   attachmentUrl?: string;
+  ipAddress?: string;
+  userAgent?: string;
 };
 
 async function isSubordinate(managerId: number, staffUserId: number): Promise<boolean> {
@@ -41,7 +44,19 @@ export const leaveService = {
       [input.userId, input.startDate, input.endDate, input.type, input.attachmentUrl || null]
     );
 
-    return result.rows[0];
+    const leaveRecord = result.rows[0];
+
+    // Log activity
+    await activityLogService.create({
+      userId: input.userId,
+      action: 'leave.request.submitted',
+      targetTable: 'leave_requests',
+      targetId: String(leaveRecord.id),
+      ipAddress: input.ipAddress,
+      userAgent: input.userAgent,
+    });
+
+    return leaveRecord;
   },
 
   async decideLeave(params: {
@@ -49,6 +64,8 @@ export const leaveService = {
     managerId: number;
     decision: 'approved' | 'declined';
     role: 'admin' | 'manager' | 'staff';
+    ipAddress?: string;
+    userAgent?: string;
   }) {
     const req = await pool.query(
       'SELECT id, user_id, status FROM leave_requests WHERE id = $1 LIMIT 1',
@@ -85,7 +102,19 @@ export const leaveService = {
       [params.requestId, params.decision, params.managerId]
     );
 
-    return updated.rows[0];
+    const updatedRecord = updated.rows[0];
+
+    // Log activity
+    await activityLogService.create({
+      userId: params.managerId,
+      action: `leave.request.${params.decision}`,
+      targetTable: 'leave_requests',
+      targetId: String(params.requestId),
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+    });
+
+    return updatedRecord;
   },
 
   async listOwn(userId: number) {

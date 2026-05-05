@@ -1,5 +1,6 @@
 import pool from './db';
 import { ApiError } from '../utils/apiError';
+import { activityLogService } from './activityLogService';
 
 async function isSubordinate(managerId: number, staffUserId: number): Promise<boolean> {
   const result = await pool.query(
@@ -16,6 +17,8 @@ export const reimbursementService = {
     description?: string;
     amount: number;
     attachmentUrl?: string;
+    ipAddress?: string;
+    userAgent?: string;
   }) {
     const result = await pool.query(
       `INSERT INTO reimbursements (user_id, title, description, amount, attachment_url, status, request_date)
@@ -24,7 +27,19 @@ export const reimbursementService = {
       [params.userId, params.title, params.description || null, params.amount, params.attachmentUrl || null]
     );
 
-    return result.rows[0];
+    const reimbursementRecord = result.rows[0];
+
+    // Log activity
+    await activityLogService.create({
+      userId: params.userId,
+      action: 'reimbursement.submitted',
+      targetTable: 'reimbursements',
+      targetId: String(reimbursementRecord.id),
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+    });
+
+    return reimbursementRecord;
   },
 
   async decide(params: {
@@ -32,6 +47,8 @@ export const reimbursementService = {
     approverId: number;
     decision: 'approved' | 'rejected';
     role: 'admin' | 'manager' | 'staff';
+    ipAddress?: string;
+    userAgent?: string;
   }) {
     const existing = await pool.query(
       'SELECT id, user_id, status FROM reimbursements WHERE id = $1 LIMIT 1',
@@ -68,7 +85,19 @@ export const reimbursementService = {
       [params.reimbursementId, params.decision, params.approverId]
     );
 
-    return updated.rows[0];
+    const updatedRecord = updated.rows[0];
+
+    // Log activity
+    await activityLogService.create({
+      userId: params.approverId,
+      action: `reimbursement.${params.decision}`,
+      targetTable: 'reimbursements',
+      targetId: String(params.reimbursementId),
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+    });
+
+    return updatedRecord;
   },
 
   async listOwn(userId: number) {

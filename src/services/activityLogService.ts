@@ -1,6 +1,37 @@
+import { PoolClient } from 'pg';
 import pool from './db';
 
+type LogParams = {
+  userId: number;
+  action: string;
+  targetTable?: string | null;
+  targetId?: string | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  client?: PoolClient;
+};
+
 export const activityLogService = {
+  async create(params: LogParams) {
+    const client = params.client || pool;
+    
+    const result = await client.query(
+      `INSERT INTO activity_logs (user_id, action, target_table, target_id, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, user_id, action, target_table, target_id, ip_address, user_agent, "createdAt"`,
+      [
+        params.userId,
+        params.action,
+        params.targetTable || null,
+        params.targetId || null,
+        params.ipAddress || null,
+        params.userAgent || null,
+      ]
+    );
+
+    return result.rows[0];
+  },
+
   async list(opts: { limit?: number; offset?: number; userId?: number; action?: string }) {
     const clauses: string[] = [];
     const params: any[] = [];

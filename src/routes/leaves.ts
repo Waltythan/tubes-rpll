@@ -1,9 +1,10 @@
-import express, { NextFunction, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { jwtAuth, AuthRequest } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { leaveService } from '../services/leaveService';
 import { sendResponse } from '../utils/apiResponse';
 import { leaveRequestSchema, parseWithSchema, positiveIntSchema } from '../utils/requestValidation';
+import { extractClientIp } from '../utils/ipCheck';
 
 const router = express.Router();
 
@@ -18,12 +19,17 @@ router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequ
       attachmentUrl: typeof req.body?.attachmentUrl === 'string' ? req.body.attachmentUrl : undefined,
     });
 
+    const clientIp = extractClientIp(req as Request);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
     const created = await leaveService.requestLeave({
       userId: parseWithSchema(positiveIntSchema, req.user!.id),
       startDate: payload.startDate,
       endDate: payload.endDate,
       type: payload.type,
       attachmentUrl: payload.attachmentUrl,
+      ipAddress: clientIp,
+      userAgent: userAgent,
     });
 
     sendResponse(res, 201, 'Leave request created', created);
@@ -52,11 +58,16 @@ router.get('/team', requireRoles('manager', 'admin'), async (req: AuthRequest, r
 
 router.patch('/:id/decision', requireRoles('manager', 'admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    const clientIp = extractClientIp(req as Request);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
     const updated = await leaveService.decideLeave({
       requestId: parseWithSchema(positiveIntSchema, req.params.id),
       managerId: parseWithSchema(positiveIntSchema, req.user!.id),
       decision: String(req.body?.decision) === 'approved' ? 'approved' : 'declined',
       role: req.user!.role,
+      ipAddress: clientIp,
+      userAgent: userAgent,
     });
 
     sendResponse(res, 200, 'Leave request updated', updated);

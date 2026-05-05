@@ -1,9 +1,10 @@
-import express, { NextFunction, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { jwtAuth, AuthRequest } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { userService } from '../services/userService';
 import { sendResponse } from '../utils/apiResponse';
 import { parseWithSchema, userCreateSchema, userUpdateSchema, positiveIntSchema } from '../utils/requestValidation';
+import { extractClientIp } from '../utils/ipCheck';
 
 const router = express.Router();
 
@@ -20,7 +21,14 @@ router.get('/', async (_req: AuthRequest, res: Response, next: NextFunction) => 
 
 router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const created = await userService.createUser(parseWithSchema(userCreateSchema, req.body));
+    const clientIp = extractClientIp(req as Request);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    const created = await userService.createUser(
+      parseWithSchema(userCreateSchema, req.body),
+      parseWithSchema(positiveIntSchema, req.user!.id),
+      { ipAddress: clientIp, userAgent: userAgent }
+    );
     sendResponse(res, 201, 'User created', created);
   } catch (error) {
     next(error);
@@ -30,7 +38,15 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
 router.patch('/:userId', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = parseWithSchema(positiveIntSchema, req.params.userId);
-    const updated = await userService.updateUser(userId, parseWithSchema(userUpdateSchema, req.body));
+    const clientIp = extractClientIp(req as Request);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    const updated = await userService.updateUser(
+      userId,
+      parseWithSchema(userUpdateSchema, req.body),
+      parseWithSchema(positiveIntSchema, req.user!.id),
+      { ipAddress: clientIp, userAgent: userAgent }
+    );
 
     sendResponse(res, 200, 'User updated', updated);
   } catch (error) {
@@ -41,7 +57,14 @@ router.patch('/:userId', async (req: AuthRequest, res: Response, next: NextFunct
 router.delete('/:userId', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = parseWithSchema(positiveIntSchema, req.params.userId);
-    const result = await userService.removeUser(userId);
+    const clientIp = extractClientIp(req as Request);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    const result = await userService.removeUser(
+      userId,
+      parseWithSchema(positiveIntSchema, req.user!.id),
+      { ipAddress: clientIp, userAgent: userAgent }
+    );
     sendResponse(res, 200, 'User deleted', result);
   } catch (error) {
     next(error);

@@ -64,15 +64,10 @@ export default function OrgChart(): JSX.Element {
     return map
   }, [departments])
 
-  const managers = useMemo(
-    () => users.filter((user) => ['manager', 'admin'].includes(getRole(user))),
-    [users]
-  )
+  // Exclude admin users from the organizational hierarchy entirely
+  const managers = useMemo(() => users.filter((user) => getRole(user) === 'manager'), [users])
 
-  const staff = useMemo(
-    () => users.filter((user) => getRole(user) === 'staff'),
-    [users]
-  )
+  const staff = useMemo(() => users.filter((user) => getRole(user) === 'staff'), [users])
 
   const groups = useMemo(() => {
     return managers.map((manager) => {
@@ -135,8 +130,8 @@ export default function OrgChart(): JSX.Element {
       ) : groups.length === 0 ? (
         <Card>
           <EmptyState
-            title="No management hierarchy found"
-            description="Create manager and staff relationships to populate this view."
+            title="No organizational hierarchy available"
+            description="There are no manager/staff relationships to display."
           />
         </Card>
       ) : (

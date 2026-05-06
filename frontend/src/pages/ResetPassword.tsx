@@ -106,57 +106,69 @@ export default function ResetPassword(): JSX.Element {
             </div>
           </div>
 
-          <div className="alert alert-info">
-            Step 1: use the token from the reset link. Step 2: enter a new password. Step 3: sign in again.
-          </div>
+          <div className="recovery-grid">
+            <div className="recovery-desc">
+              <p className="eyebrow">Account recovery</p>
+              <h3>Reset password</h3>
+              <p className="muted">Use the token from your reset link (auto-loaded in development) and set a secure new password.</p>
 
-          <form className="form-grid" onSubmit={submit}>
-            {!searchParams.get('token') && (
-              <Input
-                label="Reset token"
-                type="text"
-                placeholder="Paste token from reset link"
-                value={token}
-                onChange={(event) => setToken(event.target.value)}
-                disabled={submitting}
-                helperText={tokenError || 'Token from the reset link'}
-              />
-            )}
-            {searchParams.get('token') && (
-              <div className="alert alert-success">
-                Reset token loaded from the recovery link.
-              </div>
-            )}
-            <Input
-              label="New password"
-              type="password"
-              placeholder="Minimum 8 characters"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              disabled={submitting}
-              helperText={passwordError || 'Use a strong password with at least 8 characters'}
-            />
-            <Input
-              label="Confirm password"
-              type="password"
-              placeholder="Repeat new password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              disabled={submitting}
-              helperText={confirmError || 'Must match the new password'}
-            />
-
-            {apiError && <div className="alert alert-error">{apiError}</div>}
-            {successMessage && <div className="alert alert-success">{successMessage}</div>}
-
-            <Button type="submit" variant="primary" fullWidth disabled={submitting}>
-              {submitting ? 'Resetting...' : 'Reset Password'}
-            </Button>
-
-            <div className="auth-links">
-              <Link to="/login">Back to login</Link>
+              <ul className="step-list">
+                <li className="step-item"><div className="step-bullet">1</div><div className="step-copy">Load or paste your reset token</div></li>
+                <li className="step-item"><div className="step-bullet">2</div><div className="step-copy">Choose a strong password (min 8 chars)</div></li>
+                <li className="step-item"><div className="step-bullet">3</div><div className="step-copy">Sign in with your new credentials</div></li>
+              </ul>
             </div>
-          </form>
+
+            <div className="recovery-form">
+              <form className="form-grid" onSubmit={submit}>
+                {!searchParams.get('token') && (
+                  <Input
+                    label="Reset token"
+                    type="text"
+                    placeholder="Paste token from reset link"
+                    value={token}
+                    onChange={(event) => setToken(event.target.value)}
+                    disabled={submitting}
+                    helperText={tokenError || 'Token from the reset link'}
+                  />
+                )}
+                {searchParams.get('token') && (
+                  <div className="alert alert-success">
+                    Reset token loaded from the recovery link.
+                  </div>
+                )}
+                <Input
+                  label="New password"
+                  type="password"
+                  placeholder="Minimum 8 characters"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  disabled={submitting}
+                  helperText={passwordError || 'Use a strong password with at least 8 characters'}
+                />
+                <Input
+                  label="Confirm password"
+                  type="password"
+                  placeholder="Repeat new password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  disabled={submitting}
+                  helperText={confirmError || 'Must match the new password'}
+                />
+
+                {apiError && <div className="alert alert-error">{apiError}</div>}
+                {successMessage && <div className="alert alert-success">{successMessage}</div>}
+
+                <Button type="submit" variant="primary" fullWidth disabled={submitting}>
+                  {submitting ? 'Resetting...' : 'Reset Password'}
+                </Button>
+
+                <div className="auth-links">
+                  <Link to="/login">Back to login</Link>
+                </div>
+              </form>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

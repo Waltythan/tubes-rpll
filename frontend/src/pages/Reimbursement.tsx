@@ -15,6 +15,7 @@ export default function Reimbursement(): JSX.Element {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [attachmentPreview, setAttachmentPreview] = useState<{ url: string; title: string } | null>(null)
   const isMountedRef = useRef(true)
   const prevStatusRef = useRef<Record<number, string>>({})
 
@@ -85,6 +86,17 @@ export default function Reimbursement(): JSX.Element {
     }
   }, [])
 
+  useEffect(() => {
+    if (!attachmentPreview) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [attachmentPreview])
+
   async function handleReimbursementCreated(createdReimbursement: ReimbursementItem): Promise<void> {
     setSubmitting(true)
     try {
@@ -115,6 +127,14 @@ export default function Reimbursement(): JSX.Element {
       currency: 'IDR',
       maximumFractionDigits: 0,
     }).format(amount)
+  }
+
+  function openAttachment(url: string, title: string): void {
+    setAttachmentPreview({ url, title })
+  }
+
+  function closeAttachmentPreview(): void {
+    setAttachmentPreview(null)
   }
 
   return (
@@ -165,6 +185,18 @@ export default function Reimbursement(): JSX.Element {
                           {new Date(item.updatedAt).toLocaleString()}
                         </div>
                       )}
+                      {item.attachment_url && (
+                        <div className="reimbursement-attachment-actions">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="small"
+                            onClick={() => openAttachment(item.attachment_url!, `${item.title || 'Reimbursement'} #${item.id}`)}
+                          >
+                            View attachment
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -175,6 +207,33 @@ export default function Reimbursement(): JSX.Element {
               <EmptyState />
             </Card>
           )}
+        </div>
+      )}
+
+      {attachmentPreview && (
+        <div className="attachment-preview-modal" role="dialog" aria-modal="true" aria-labelledby="attachment-preview-title">
+          <div className="attachment-preview-backdrop" onClick={closeAttachmentPreview} />
+          <div className="attachment-preview-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="attachment-preview-header">
+              <div>
+                <p className="eyebrow">Receipt preview</p>
+                <h3 id="attachment-preview-title">{attachmentPreview.title}</h3>
+              </div>
+              <Button type="button" variant="ghost" size="small" onClick={closeAttachmentPreview}>
+                Close
+              </Button>
+            </div>
+
+            <div className="attachment-preview-body">
+              <img className="attachment-preview-image" src={attachmentPreview.url} alt={attachmentPreview.title} />
+            </div>
+
+            <div className="attachment-preview-footer">
+              <a className="attachment-preview-link" href={attachmentPreview.url} target="_blank" rel="noreferrer">
+                Open in new tab
+              </a>
+            </div>
+          </div>
         </div>
       )}
     </div>

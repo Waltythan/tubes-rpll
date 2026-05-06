@@ -1,18 +1,18 @@
 {
   "development": {
     "username": "postgres",
-    "password": "changeme",
+    "password": "Rja021005",
     "database": "mini_hris",
     "host": "127.0.0.1",
-    "port": 5432,
+    "port": 5433,
     "dialect": "postgres"
   },
   "test": {
     "username": "postgres",
-    "password": "changeme",
+    "password": "Rja021005",
     "database": "mini_hris_test",
     "host": "127.0.0.1",
-    "port": 5432,
+    "port": 5433,
     "dialect": "postgres"
   },
   "production": {

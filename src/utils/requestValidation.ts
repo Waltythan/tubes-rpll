@@ -36,6 +36,10 @@ export const forgotPasswordSchema = z.object({
   email: z.string().trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
 });
 
+export const requestResetSchema = z.object({
+  email: z.string().trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
+});
+
 export const resetPasswordSchema = z.object({
   token: z.string().min(10, 'Token reset tidak valid'),
   newPassword: z.string().min(8, 'Password minimal 8 karakter'),

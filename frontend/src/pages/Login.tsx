@@ -99,7 +99,7 @@ export default function Login(): JSX.Element {
         <Input label="Password" type="password" placeholder="Enter your password" value={password} onChange={(event) => handlePasswordChange(event.target.value)} disabled={loginDisabled} />
 
         <div className="auth-links">
-          <Link to="/forgot-password">Forgot Password?</Link>
+          <Link to="/forgot-password">Request Password Reset</Link>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}

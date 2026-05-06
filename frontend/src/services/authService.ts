@@ -33,6 +33,14 @@ export interface ForgotPasswordResult {
   resetToken?: string
 }
 
+export interface ResetRequestItem {
+  id: number
+  user_id: number
+  user_name?: string | null
+  email: string
+  created_at: string
+}
+
 interface BackendResponse<T> {
   status: string
   message: string
@@ -65,6 +73,23 @@ function normalizeAuthError(error: unknown): AuthError {
 
 export async function forgotPassword(email: string): Promise<void> {
   await api.post<BackendResponse<null>>('/auth/forgot', { email })
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await api.post<BackendResponse<null>>('/auth/request-reset', { email })
+}
+
+export async function getPendingResetRequests(): Promise<ResetRequestItem[]> {
+  const response = await api.get<BackendResponse<ResetRequestItem[]>>('/auth/reset-requests')
+  return response.data.data || []
+}
+
+export async function approveResetRequest(requestId: number): Promise<void> {
+  await api.patch<BackendResponse<unknown>>(`/auth/reset-requests/${requestId}/approve`)
+}
+
+export async function rejectResetRequest(requestId: number): Promise<void> {
+  await api.patch<BackendResponse<unknown>>(`/auth/reset-requests/${requestId}/reject`)
 }
 
 export async function getDevResetToken(email: string): Promise<ForgotPasswordResult> {

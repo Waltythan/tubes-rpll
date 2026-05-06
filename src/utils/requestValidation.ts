@@ -28,17 +28,17 @@ export const isoDateSchema = z
   .refine(isValidIsoDate, 'Tanggal tidak valid');
 
 export const loginSchema = z.object({
-  email: z.string().trim().email('Format email tidak valid').toLowerCase(),
-  password: z.string().min(8, 'Password minimal 8 karakter'),
+  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
+  password: z.string({ required_error: 'Password is required' }).min(8, 'Password minimal 8 karakter'),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().trim().email('Format email tidak valid').toLowerCase(),
+  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(10, 'Token reset tidak valid'),
-  newPassword: z.string().min(8, 'Password minimal 8 karakter'),
+  token: z.string({ required_error: 'Token is required' }).min(10, 'Token reset tidak valid'),
+  newPassword: z.string({ required_error: 'New password is required' }).min(8, 'Password minimal 8 karakter'),
 });
 
 export const profileUpdateSchema = z.object({

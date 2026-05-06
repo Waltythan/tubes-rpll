@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import Button from '../common/Button'
+import ImageUploader from '../common/ImageUploader'
+import RecentImages from '../common/RecentImages'
 import { useLoading } from '../../hooks/useLoading'
 import { hrService, type ReimbursementItem } from '../../services/hrService'
 
@@ -16,11 +18,13 @@ interface ReimbursementFormErrors {
 interface ReimbursementFormValues {
   amount: string
   description: string
+  attachmentUrl: string
 }
 
 const initialValues: ReimbursementFormValues = {
   amount: '',
   description: '',
+  attachmentUrl: '',
 }
 
 export default function ReimbursementForm({ onSubmitted, onClose }: ReimbursementFormProps): JSX.Element {
@@ -30,6 +34,7 @@ export default function ReimbursementForm({ onSubmitted, onClose }: Reimbursemen
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [showRecentImages, setShowRecentImages] = useState(false)
 
   function validate(currentValues: ReimbursementFormValues): ReimbursementFormErrors {
     const nextErrors: ReimbursementFormErrors = {}
@@ -66,6 +71,7 @@ export default function ReimbursementForm({ onSubmitted, onClose }: Reimbursemen
       const createdReimbursement = await withLoading(() => hrService.createReimbursement({
         amount: Number(values.amount),
         description: values.description.trim(),
+        attachmentUrl: values.attachmentUrl || undefined,
       }))
 
       setValues(initialValues)
@@ -127,6 +133,33 @@ export default function ReimbursementForm({ onSubmitted, onClose }: Reimbursemen
         />
         {errors.description && <span className="field-error">{errors.description}</span>}
       </label>
+
+      <label className="field">
+        <span className="field-label">Receipt Image (Optional)</span>
+        <p className="field-hint">Upload a photo of your receipt or supporting document</p>
+        <ImageUploader
+          onImageUpload={(imageUrl) => updateField('attachmentUrl', imageUrl)}
+          currentImageUrl={values.attachmentUrl}
+          disabled={submitting}
+        />
+        <Button 
+          type="button" 
+          variant="secondary" 
+          size="small"
+          onClick={() => setShowRecentImages(true)}
+          disabled={submitting}
+          style={{ marginTop: '0.5rem' }}
+        >
+          Choose from recent uploads
+        </Button>
+      </label>
+
+      <RecentImages
+        isOpen={showRecentImages}
+        onClose={() => setShowRecentImages(false)}
+        onSelectImage={(imageUrl) => updateField('attachmentUrl', imageUrl)}
+        currentImageUrl={values.attachmentUrl}
+      />
 
       <div className="form-actions">
         <Button type="submit" disabled={submitting}>

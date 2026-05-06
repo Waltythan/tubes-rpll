@@ -5,7 +5,6 @@ import pool from './db';
 
 type UserCreateInput = {
   departmentId?: number | null;
-  name?: string | null;
   email: string;
   password: string;
   role: 'admin' | 'manager' | 'staff';
@@ -121,41 +120,21 @@ export const userService = {
 
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
-    const client = await pool.connect();
-    let result;
-
-    try {
-      await client.query('BEGIN');
-
-      result = await client.query(
-        `INSERT INTO users (department_id, email, password, role, base_salary, manager_id, "createdAt", "updatedAt")
-         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-         RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
-        [
-          input.departmentId ?? null,
-          input.email,
-          hashedPassword,
-          input.role,
-          Number.isFinite(input.baseSalary) ? input.baseSalary : 0,
-          input.managerId ?? null,
-        ]
-      );
-
-      const row = result.rows[0] as { user_id: number };
-
-      await client.query(
-        `INSERT INTO profiles (user_id, full_name, "createdAt", "updatedAt")
-         VALUES ($1, $2, NOW(), NOW())`,
-        [row.user_id, input.name || input.email]
-      );
-
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    const result = await pool.query(
+      `INSERT INTO users (department_id, email, password, role, base_salary, manager_id, "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
+      [
+        input.departmentId || null,
+        input.email,
+        hashedPassword,
+        input.role,
+        Number.isFinite(input.baseSalary) ? input.baseSalary : 0,
+        input.managerId || null,
+        new Date(),
+        new Date(),
+      ]
+    );
 
     const row = result.rows[0] as { user_id: number; createdAt?: string };
 
@@ -199,11 +178,10 @@ export const userService = {
            manager_id = COALESCE($7, manager_id),
            "updatedAt" = NOW()
        WHERE user_id = $1
-       RETURNING user_id, department_id, name, email, role, base_salary, manager_id, "createdAt"`,
+       RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
       [
         userId,
         input.departmentId ?? null,
-        input.name ?? null,
         input.email ?? null,
         passwordValue,
         input.role ?? null,

@@ -53,6 +53,7 @@ export interface ReimbursementItem {
 export interface CreateReimbursementInput extends Record<string, unknown> {
   amount: number
   description: string
+  attachmentUrl?: string
 }
 
 export interface PayrollGenerationResult {

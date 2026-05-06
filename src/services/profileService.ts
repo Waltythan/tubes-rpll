@@ -69,7 +69,7 @@ export const profileService = {
       // Get user's full name for new profile
       const userResult = await pool.query('SELECT email FROM users WHERE user_id = $1 LIMIT 1', [userId]);
       if (userResult.rowCount !== 1) {
-        throw new Error('User not found');
+        throw new ApiError(404, 'User tidak ditemukan');
       }
 
       result = await pool.query(

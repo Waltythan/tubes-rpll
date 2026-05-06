@@ -1046,3 +1046,280 @@ a { color: inherit; }
     transform: translate(-50%, -50%);
   }
 }
+
+/* Danger button variant */
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(220, 38, 38, 0.2);
+}
+.btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+}
+
+/* Manual penalty form inside payroll cards */
+.penalty-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px dashed rgba(220, 38, 38, 0.4);
+  color: #b91c1c;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 7px 12px;
+  border-radius: 10px;
+  width: 100%;
+  justify-content: center;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.penalty-toggle-btn:hover {
+  background: rgba(220, 38, 38, 0.05);
+  border-color: rgba(220, 38, 38, 0.65);
+}
+
+.penalty-form {
+  margin-top: 12px;
+  padding: 14px;
+  background: rgba(220, 38, 38, 0.04);
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  border-radius: 14px;
+  animation: fadeScaleIn 160ms ease-out;
+}
+
+.penalty-form-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #b91c1c;
+}
+
+/* Adjustment Type Toggle (AdminPenalty) */
+.adjustment-type-toggle {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 14px;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.adjustment-type-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 160ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.adjustment-type-btn:hover:not(.active-deduction):not(.active-allowance) {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text);
+}
+
+.adjustment-type-btn.active-deduction {
+  background: #fff;
+  color: #dc2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12);
+}
+
+.adjustment-type-btn.active-allowance {
+  background: #fff;
+  color: var(--primary);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+}
+
+/* Detailed Payroll Card Styles */
+.payroll-detail-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+.payroll-detail-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.payroll-base-salary {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  border: 1px solid #e2e8f0;
+}
+
+.payroll-breakdown-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  min-height: 100px;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-label.allowance { color: #059669; }
+.section-label.penalty { color: #dc2626; }
+
+.adjustment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adjustment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.adjustment-item:last-child {
+  border-bottom: none;
+}
+
+.adj-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.adj-desc { color: #1e293b; font-weight: 500; }
+.adj-date { font-size: 0.72rem; color: #64748b; }
+
+.adj-amount { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.adjustment-item.incentive .adj-amount { color: #059669; }
+.adjustment-item.deduction .adj-amount { color: #dc2626; }
+
+.payroll-totals {
+  border-top: 2px dashed #e2e8f0;
+  padding-top: 16px;
+  margin-top: auto;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.net-salary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border-radius: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+.net-amount { font-size: 1.25rem; font-family: 'JetBrains Mono', monospace; }
+
+/* Request Card Styles (Leave & Reimbursement) */
+.request-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+.request-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.card-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-item .label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-item .value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.approver-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  color: #15803d;
+  border-radius: 10px;
+  margin-top: auto;
+  border: 1px solid #dcfce7;
+}
+
+.approver-info .label {
+  font-weight: 700;
+  opacity: 0.8;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.approver-info .value {
+  font-weight: 600;
+}
+
+.card-footer-timestamp {
+  margin-top: 12px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-align: right;
+}
+
+.reimbursement-amount {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 12px 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+
+

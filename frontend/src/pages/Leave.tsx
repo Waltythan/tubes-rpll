@@ -89,15 +89,21 @@ export default function Leave(): JSX.Element {
     await refreshLeaves()
   }
 
+  function formatDate(dateStr?: string): string {
+    if (!dateStr) return '-'
+    return new Date(dateStr).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
   return (
     <div className="page-stack">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Leave</p>
-          <h2>Leave requests</h2>
+          <p className="eyebrow">Time Off</p>
+          <h2>My Leave Requests</h2>
+          <p className="muted">Track and manage your vacation and sick leave applications.</p>
         </div>
-        <Button type="button" onClick={() => setIsFormOpen((current) => !current)} loading={loading}>
-          {isFormOpen ? 'Hide request form' : 'Request Leave'}
+        <Button type="button" variant={isFormOpen ? 'secondary' : 'primary'} onClick={() => setIsFormOpen((current) => !current)} loading={loading}>
+          {isFormOpen ? 'Hide request form' : 'New Leave Request'}
         </Button>
       </div>
 
@@ -105,43 +111,59 @@ export default function Leave(): JSX.Element {
 
       {isFormOpen && (
         <Card>
+          <div className="section-header" style={{ marginBottom: '20px' }}>
+            <div>
+              <p className="eyebrow">Application</p>
+              <h3 style={{ margin: 0 }}>Request New Leave</h3>
+            </div>
+          </div>
           <LeaveForm onSubmitted={handleLeaveCreated} onClose={() => setIsFormOpen(false)} />
         </Card>
       )}
 
       <div className="grid grid-3">
         {items.length > 0 ? items.map((item) => (
-          <Card key={item.id}>
-            <div className="section-header">
-              <div className="leave-card-header">
-                <div>
-                  <p className="card-title">{item.type || 'Leave'} #{item.id}</p>
-                  <p className="muted">{item.start_date || '-'} to {item.end_date || '-'}</p>
-                </div>
-                <div className="prominent-status">
-                  <StatusBadge status={item.status || 'pending'} />
-                  {item.approvedBy ? (
-                    <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }} title={item.approvedBy.email}>
-                      Approved by: {item.approvedBy.name}
-                    </div>
-                  ) : item.approved_by ? (
-                    <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
-                      Approved by: Unknown Approver
-                    </div>
-                  ) : null}
-                  {item.updatedAt && (
-                    <div className="muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
-                      {new Date(item.updatedAt).toLocaleString()}
-                    </div>
-                  )}
-                </div>
+          <Card key={item.id} className="request-card">
+            <div className="section-header" style={{ marginBottom: '16px' }}>
+              <div>
+                <p className="eyebrow" style={{ color: item.type === 'unpaid' ? '#b45309' : 'var(--primary)' }}>
+                  {item.type === 'unpaid' ? '⚠ Unpaid Leave' : '✦ Annual Leave'}
+                </p>
+                <h3 style={{ margin: '4px 0', fontSize: '1.1rem' }}>{item.reason || 'No reason provided'}</h3>
+                <p className="muted small">ID: #{item.id}</p>
               </div>
+              <StatusBadge status={item.status || 'pending'} />
+            </div>
+
+            <div className="card-details-grid">
+              <div className="detail-item">
+                <span className="label">Starts</span>
+                <span className="value">{formatDate(item.start_date)}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Ends</span>
+                <span className="value">{formatDate(item.end_date)}</span>
+              </div>
+            </div>
+
+            {item.approvedBy && (
+              <div className="approver-info">
+                <span className="label">Approved by</span>
+                <span className="value">{item.approvedBy.name}</span>
+              </div>
+            )}
+            
+            <div className="card-footer-timestamp">
+              Updated: {new Date(item.updatedAt || item.createdAt || 0).toLocaleString()}
             </div>
           </Card>
         )) : (
-          <Card>
-            <EmptyState />
-          </Card>
+          <div className="grid-full">
+            <EmptyState 
+              title="No leave requests yet"
+              description="Your leave history will appear here once you submit a request."
+            />
+          </div>
         )}
       </div>
     </div>

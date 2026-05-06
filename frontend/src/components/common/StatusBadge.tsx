@@ -10,9 +10,9 @@ export default function StatusBadge({ status, variant = 'neutral' }: StatusBadge
   if (!variant || variant === 'neutral') {
     if (displayStatus === 'present' || displayStatus === 'approved') {
       displayVariant = 'success'
-    } else if (displayStatus === 'late' || displayStatus === 'pending') {
+    } else if (displayStatus === 'pending') {
       displayVariant = 'warning'
-    } else if (displayStatus === 'absent' || displayStatus === 'rejected') {
+    } else if (displayStatus === 'late' || displayStatus === 'absent' || displayStatus === 'rejected') {
       displayVariant = 'danger'
     }
   }
@@ -25,9 +25,14 @@ export default function StatusBadge({ status, variant = 'neutral' }: StatusBadge
     neutral: 'badge-neutral',
   }
 
+  let displayText = displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1);
+  if (displayStatus === 'present') {
+    displayText = 'On Time';
+  }
+
   return (
     <span className={`badge ${classMap[displayVariant] || classMap.neutral}`}>
-      {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}
+      {displayText}
     </span>
   )
 }

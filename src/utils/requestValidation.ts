@@ -71,7 +71,8 @@ export const activityLogsQuerySchema = z.object({
 });
 
 export const payrollGenerateSchema = z.object({
-  period: isoDateSchema.optional(),
+  month: z.coerce.number().int().min(1).max(12),
+  year: z.coerce.number().int().min(2000).max(2100),
 });
 
 const nullablePositiveIntSchema = z.preprocess(
@@ -111,6 +112,7 @@ export const leaveRequestSchema = z
     startDate: isoDateSchema,
     endDate: isoDateSchema,
     type: z.string().trim().min(1, 'Type cuti wajib diisi'),
+    reason: z.string().trim().min(1, 'Alasan wajib diisi'),
     attachmentUrl: z.string().trim().optional(),
   })
   .refine((data) => data.startDate <= data.endDate, {

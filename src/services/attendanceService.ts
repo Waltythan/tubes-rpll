@@ -191,12 +191,38 @@ export const attendanceService = {
         throw new ApiError(400, 'QR token sudah kedaluwarsa.');
       }
 
-      // Get server time for consistent timestamp across all attendances
-      const serverTimeRes = await client.query('SELECT NOW() AT TIME ZONE \'UTC\' as server_now');
-      const serverNow = new Date(serverTimeRes.rows[0].server_now);
-      const dateKey = serverNow.toISOString().slice(0, 10);
-      const lateBoundary = buildLateBoundary(dateKey);
-      const status = serverNow > lateBoundary ? 'late' : 'present';
+      // Calculate late status based on configuration
+      const checkInTime = params.now || new Date();
+      
+      // Use local timezone to define the date
+      const dateKey = checkInTime.getFullYear() + '-' + 
+                      String(checkInTime.getMonth() + 1).padStart(2, '0') + '-' + 
+                      String(checkInTime.getDate()).padStart(2, '0');
+      
+      const workStartTimeStr = process.env.WORK_START_TIME || '09:00';
+      const [startHourStr, startMinStr] = workStartTimeStr.split(':');
+      const startHour = parseInt(startHourStr, 10) || 9;
+      const startMin = parseInt(startMinStr, 10) || 0;
+      
+      let graceMinutes = parseInt(process.env.LATE_GRACE_MINUTES || '15', 10);
+      if (isNaN(graceMinutes) || graceMinutes < 0) graceMinutes = 15;
+      
+      const thresholdMinutes = (startHour * 60) + startMin + graceMinutes;
+      const currentMinutes = (checkInTime.getHours() * 60) + checkInTime.getMinutes();
+      
+      const isLate = currentMinutes > thresholdMinutes;
+      const status = isLate ? 'late' : 'present';
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[ATTENDANCE LATE CHECK]', {
+          checkInTime: checkInTime.toISOString(),
+          localTimeStr: `${checkInTime.getHours()}:${checkInTime.getMinutes()}`,
+          thresholdMinutes,
+          currentMinutes,
+          isLate,
+          finalStatus: status
+        });
+      }
 
       let attendanceRow: AttendanceRow;
       try {
@@ -249,10 +275,10 @@ export const attendanceService = {
     try {
       await client.query('BEGIN');
 
-      // Get server time for consistent timestamp
-      const serverTimeRes = await client.query('SELECT NOW() AT TIME ZONE \'UTC\' as server_now');
-      const serverNow = new Date(serverTimeRes.rows[0].server_now);
-      const dateKey = serverNow.toISOString().slice(0, 10);
+      const checkOutTime = params.now || new Date();
+      const dateKey = checkOutTime.getFullYear() + '-' + 
+                      String(checkOutTime.getMonth() + 1).padStart(2, '0') + '-' + 
+                      String(checkOutTime.getDate()).padStart(2, '0');
 
       const existing = await client.query(
         `SELECT id, clock_in, clock_out

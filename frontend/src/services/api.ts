@@ -8,26 +8,6 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler): void {
   unauthorizedHandler = handler
 }
 
-function parseRetryAfterSeconds(error: AxiosError): number | undefined {
-  const headers = error.response?.headers
-  if (!headers) return undefined
-
-  const retryAfterRaw = headers['retry-after']
-  const rateLimitResetRaw = headers['ratelimit-reset'] || headers['x-ratelimit-reset']
-
-  const retryAfter = Number(Array.isArray(retryAfterRaw) ? retryAfterRaw[0] : retryAfterRaw)
-  if (Number.isFinite(retryAfter) && retryAfter > 0) {
-    return Math.ceil(retryAfter)
-  }
-
-  const rateLimitReset = Number(Array.isArray(rateLimitResetRaw) ? rateLimitResetRaw[0] : rateLimitResetRaw)
-  if (Number.isFinite(rateLimitReset) && rateLimitReset > 0) {
-    return Math.ceil(rateLimitReset)
-  }
-
-  return undefined
-}
-
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
   headers: {
@@ -62,10 +42,7 @@ api.interceptors.response.use(
     }
 
     const message = error.response?.data?.message || error.message || 'Request failed'
-    const normalizedError = new Error(message) as Error & { status?: number; retryAfterSeconds?: number }
-    normalizedError.status = error.response?.status
-    normalizedError.retryAfterSeconds = parseRetryAfterSeconds(error)
-    return Promise.reject(normalizedError)
+    return Promise.reject(new Error(message))
   }
 )
 

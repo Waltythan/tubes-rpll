@@ -66,19 +66,17 @@ export const profileService = {
         result = { rows: [existing.rows[0]] };
       }
     } else {
-      // Prefer the submitted display name; fall back to email only if no name was provided.
+      // Get user's full name for new profile
       const userResult = await pool.query('SELECT email FROM users WHERE user_id = $1 LIMIT 1', [userId]);
       if (userResult.rowCount !== 1) {
         throw new Error('User not found');
       }
 
-      const fullName = data.full_name ?? userResult.rows[0].email;
-
       result = await pool.query(
         `INSERT INTO profiles (user_id, full_name, address, phone_number, profile_picture_url, "createdAt", "updatedAt")
          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
          RETURNING *`,
-        [userId, fullName, data.address ?? null, data.phone_number ?? null, data.profile_picture_url ?? null]
+        [userId, userResult.rows[0].email, data.address ?? null, data.phone_number ?? null, data.profile_picture_url ?? null]
       );
     }
 

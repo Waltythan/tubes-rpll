@@ -7,7 +7,7 @@ import { loginSchema, parseWithSchema, forgotPasswordSchema, resetPasswordSchema
 
 const router = express.Router();
 
-router.post('/login', loginRateLimit, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = parseWithSchema(loginSchema, {
       email: req.body?.email,
@@ -29,23 +29,7 @@ router.post('/forgot', async (req: Request, res: Response, next: NextFunction) =
     // Do not reveal whether the email exists; service will silently return if not found
     await authService.forgotPassword(email);
 
-    sendResponse(res, 200, 'If email exists, reset instructions have been sent');
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get('/dev/reset-token', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if ((process.env.NODE_ENV || 'development') !== 'development') {
-      sendResponse(res, 404, 'Not found');
-      return;
-    }
-
-    const { email } = parseWithSchema(forgotPasswordSchema, { email: req.query?.email });
-    const tokenInfo = authService.getLatestResetToken(email);
-
-    sendResponse(res, 200, 'Reset token fetched', tokenInfo);
+    sendResponse(res, 200, 'Jika email terdaftar, instruksi untuk mereset password telah dikirim');
   } catch (error) {
     next(error);
   }

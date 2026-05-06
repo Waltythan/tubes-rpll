@@ -5,66 +5,16 @@ import { userService } from '../services/userService';
 import { ApiError } from '../utils/apiError';
 import { sendResponse } from '../utils/apiResponse';
 import { extractClientIp } from '../utils/ipCheck';
-import { ApiError } from '../utils/apiError';
+import {
+  parseWithSchema,
+  positiveIntSchema,
+  sanitizeUserPayload,
+  stripUndefinedFields,
+  userCreateSchema,
+  userUpdateSchema,
+} from '../utils/requestValidation';
 
 const router = express.Router();
-
-type UserPayload = {
-  full_name?: string | null;
-  name?: string | null;
-  email?: string;
-  password?: string;
-  role?: string;
-  managerId?: number | null;
-  departmentId?: number | null;
-  baseSalary?: number;
-};
-
-function asNonEmptyString(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function asNumberOrNull(value: unknown): number | null | undefined {
-  if (value === undefined) return undefined;
-  if (value === null || value === '') return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function sanitizeUserPayload(body: unknown): UserPayload {
-  const raw = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
-
-  return {
-    full_name: asNonEmptyString(raw.full_name) ?? null,
-    name: asNonEmptyString(raw.name),
-    email: asNonEmptyString(raw.email),
-    password: asNonEmptyString(raw.password),
-    role: asNonEmptyString(raw.role),
-    managerId: asNumberOrNull(raw.managerId),
-    departmentId: asNumberOrNull(raw.departmentId),
-    baseSalary: raw.baseSalary === undefined || raw.baseSalary === null || raw.baseSalary === ''
-      ? undefined
-      : Number(raw.baseSalary),
-  };
-}
-
-function stripUndefinedFields<T extends Record<string, unknown>>(payload: T): Partial<T> {
-  return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined)) as Partial<T>;
-}
-
-function sendValidationErrorIfPresent(error: unknown, res: Response): boolean {
-  if (error instanceof ApiError && error.statusCode === 400 && Array.isArray(error.details)) {
-    res.status(400).json({
-      message: 'Invalid user input',
-      errors: error.details,
-    });
-    return true;
-  }
-
-  return false;
-}
 
 router.use(jwtAuth);
 
@@ -97,41 +47,27 @@ router.get('/departments', requireRoles('admin', 'manager'), async (_req: AuthRe
 
 router.post('/', requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    console.log('POST /users body:', req.body);
-    const body = req.body || {};
-    const creatorId = req.user?.id;
-    if (!creatorId) {
-      throw new ApiError(401, 'Authenticated user id is missing');
-    }
-    const clientIp = extractClientIp(req as Request);
-    const userAgent = req.headers['user-agent'] as string | undefined;
-    const isDev = process.env.NODE_ENV !== 'production';
+    const body = req.body || {}
+    const creatorId = req.user?.id
+    if (!creatorId) throw new ApiError(401, 'Authenticated user id is missing')
 
-    if (isDev) {
-      console.log('Incoming user payload:', req.body);
-    }
+    const clientIp = extractClientIp(req as Request)
+    const userAgent = req.headers['user-agent'] as string | undefined
 
-    const sanitizedPayload = stripUndefinedFields(sanitizeUserPayload(req.body));
-
-    if (isDev) {
-      console.log('Sanitized payload:', sanitizedPayload);
-    }
-
-    const validatedPayload = parseWithSchema(userCreateSchema, sanitizedPayload);
+    const sanitized = stripUndefinedFields(sanitizeUserPayload(body))
+    const validatedPayload = parseWithSchema(userCreateSchema, sanitized)
 
     const created = await userService.createUser(
       validatedPayload,
-      parseWithSchema(positiveIntSchema, req.user!.id),
-      { ipAddress: clientIp, userAgent: userAgent }
-    );
-    sendResponse(res, 201, 'User created', created);
+      parseWithSchema(positiveIntSchema, creatorId),
+      { ipAddress: clientIp, userAgent }
+    )
+
+    sendResponse(res, 201, 'User created', created)
   } catch (error) {
-    if (sendValidationErrorIfPresent(error, res)) {
-      return;
-    }
-    next(error);
+    next(error)
   }
-});
+})
 
 router.patch('/:userId', requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -161,9 +97,6 @@ router.patch('/:userId', requireRoles('admin'), async (req: AuthRequest, res: Re
 
     sendResponse(res, 200, 'User updated', updated);
   } catch (error) {
-    if (sendValidationErrorIfPresent(error, res)) {
-      return;
-    }
     next(error);
   }
 });

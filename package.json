@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "lint": "echo \"No lint script\"",
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

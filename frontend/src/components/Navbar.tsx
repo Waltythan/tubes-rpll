@@ -5,9 +5,7 @@ import Button from './Button'
 export default function Navbar(): JSX.Element {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const role = String(user?.role || user?.roles || 'staff').toLowerCase()
-  const isAdmin = role === 'admin'
-  const roleLabel = isAdmin ? 'Admin' : role === 'manager' ? 'Manager' : 'Staff'
+  const isAdmin = (user?.role || user?.roles) === 'admin'
 
   function handleLogout(): void {
     logout()
@@ -27,7 +25,7 @@ export default function Navbar(): JSX.Element {
         <div className="topbar-user-meta">
           <span className="topbar-user-email">{user?.name || user?.fullName || user?.full_name || user?.email || 'Signed in'}</span>
           <span className={['badge', isAdmin ? 'badge-success' : 'badge-neutral'].join(' ')}>
-            {roleLabel}
+            {isAdmin ? 'Admin' : 'Staff'}
           </span>
         </div>
         <Button type="button" variant="ghost" onClick={handleLogout}>Logout</Button>

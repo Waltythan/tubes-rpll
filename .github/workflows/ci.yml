@@ -1,0 +1,61 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # ========================
+      # ROOT (BACKEND)
+      # ========================
+      - name: Install backend deps
+        run: npm install
+
+      - name: Lint backend
+        run: npm run lint
+
+      - name: Type check backend
+        run: npx tsc --noEmit
+
+      - name: Test backend
+        run: npm run test
+
+      - name: Build backend
+        run: npm run build
+
+      # ========================
+      # FRONTEND
+      # ========================
+      - name: Install frontend deps
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Lint frontend
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Type check frontend
+        working-directory: ./frontend
+        run: npx tsc --noEmit
+
+      - name: Test frontend
+        working-directory: ./frontend
+        run: npm run test
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build

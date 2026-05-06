@@ -26,16 +26,9 @@ export default function Sidebar(_: SidebarProps): JSX.Element {
       <nav className="sidebar-nav">
         <NavLink to="/dashboard" className={navLinkClass}><span className="nav-icon">D</span><span className="nav-label">Dashboard</span></NavLink>
         <NavLink to="/profile" className={navLinkClass}><span className="nav-icon">P</span><span className="nav-label">Profile</span></NavLink>
-        {role !== 'admin' && (
-          <NavLink to="/attendance" className={navLinkClass}><span className="nav-icon">A</span><span className="nav-label">Attendance</span></NavLink>
-        )}
-        {/* Show personal request links only to staff (not admin) */}
-        {role === 'staff' && (
-          <>
-            <NavLink to="/leave" className={navLinkClass}><span className="nav-icon">L</span><span className="nav-label">My Leave</span></NavLink>
-            <NavLink to="/reimbursement" className={navLinkClass}><span className="nav-icon">R</span><span className="nav-label">My Reimbursements</span></NavLink>
-          </>
-        )}
+        <NavLink to="/attendance" className={navLinkClass}><span className="nav-icon">A</span><span className="nav-label">Attendance</span></NavLink>
+        <NavLink to="/leave" className={navLinkClass}><span className="nav-icon">L</span><span className="nav-label">Leave</span></NavLink>
+        <NavLink to="/reimbursement" className={navLinkClass}><span className="nav-icon">R</span><span className="nav-label">Reimbursement</span></NavLink>
 
         {canApproveRequests && (
           <>
@@ -56,7 +49,7 @@ export default function Sidebar(_: SidebarProps): JSX.Element {
             <div className="sidebar-section-label">
               Admin
             </div>
-            <NavLink to="/admin/payroll" className={navLinkClass}><span className="nav-icon">$</span><span className="nav-label">Payroll Management</span></NavLink>
+            <NavLink to="/admin/payroll" className={navLinkClass}><span className="nav-icon">$</span><span className="nav-label">Generate Payroll</span></NavLink>
             <NavLink to="/payroll" className={navLinkClass}><span className="nav-icon">$</span><span className="nav-label">Payroll</span></NavLink>
             <NavLink to="/users" className={navLinkClass}><span className="nav-icon">U</span><span className="nav-label">Users</span></NavLink>
             <NavLink to="/admin/attendance" className={navLinkClass}><span className="nav-icon">📝</span><span className="nav-label">Attendance</span></NavLink>

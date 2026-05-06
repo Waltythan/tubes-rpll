@@ -39,12 +39,16 @@ async function canManagerApprove(managerId: number, staffUserId: number): Promis
     manager_department_id: number | null;
   };
 
+  const directSubordinate = row.requester_manager_id === row.manager_user_id;
   const sameDepartment = row.requester_department_id != null
     && row.manager_department_id != null
     && row.requester_department_id === row.manager_department_id;
 
-  // Enforce manager approval only within same department. Admin bypass is handled by caller.
-  return sameDepartment;
+  if (strictDepartmentApproval) {
+    return sameDepartment;
+  }
+
+  return directSubordinate || sameDepartment;
 }
 
 export const leaveService = {

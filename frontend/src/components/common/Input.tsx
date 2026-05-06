@@ -1,4 +1,3 @@
-import React, { forwardRef } from 'react'
 import type { InputHTMLAttributes, ReactNode } from 'react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -6,14 +5,12 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   helperText?: ReactNode
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ label, helperText, className = '', ...props }, ref) {
+export default function Input({ label, helperText, className = '', ...props }: InputProps): JSX.Element {
   return (
     <label className="field">
       {label && <span className="field-label">{label}</span>}
-      <input ref={ref} className={["input", className].join(' ').trim()} {...props} />
+      <input className={['input', className].join(' ').trim()} {...props} />
       {helperText && <span className="field-helper">{helperText}</span>}
     </label>
   )
-})
-
-export default Input
+}

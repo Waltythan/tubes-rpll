@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
 import ErrorAlert from '../components/common/ErrorAlert'
-import Input from '../components/common/Input'
 import { showToast } from '../components/common/ToastContainer'
 import { hrService, type DepartmentItem, type UserItem } from '../services/hrService'
 
@@ -32,8 +31,6 @@ export default function Users(): JSX.Element {
   const roleRef = useRef<HTMLSelectElement | null>(null)
   const managerRef = useRef<HTMLSelectElement | null>(null)
   const departmentRef = useRef<HTMLSelectElement | null>(null)
-  const baseSalaryRef = useRef<HTMLInputElement | null>(null)
-  const [selectedRole, setSelectedRole] = useState<string | null>(null)
 
   const managerLookup = useMemo(() => {
     const map = new Map<number, string>()
@@ -53,15 +50,6 @@ export default function Users(): JSX.Element {
     }
     return map
   }, [departments])
-
-  function getUserBaseSalary(user?: UserItem | null): number | null {
-    if (!user) return null
-    const raw: any = user as any
-    const val = raw.base_salary ?? raw.baseSalary ?? null
-    if (val === null || val === undefined || val === '') return null
-    const n = Number(val)
-    return Number.isFinite(n) ? n : null
-  }
 
   async function loadData(): Promise<void> {
     try {
@@ -88,14 +76,12 @@ export default function Users(): JSX.Element {
   function openCreate() {
     setEditing(null)
     setIsFormOpen(true)
-    setSelectedRole('staff')
     setTimeout(() => nameRef.current?.focus(), 60)
   }
 
   function openEdit(user: UserItem) {
     setEditing(user)
     setIsFormOpen(true)
-    setSelectedRole(user.role || 'staff')
     setTimeout(() => nameRef.current?.focus(), 60)
   }
 
@@ -111,35 +97,15 @@ export default function Users(): JSX.Element {
     setSubmitting(true)
     setError(null)
 
-    const nameValue = nameRef.current?.value?.trim()
-    const emailValue = emailRef.current?.value?.trim()
-    const roleValue = roleRef.current?.value || selectedRole || 'staff'
-    const managerValue = managerRef.current?.value
-    const departmentValue = departmentRef.current?.value
-
     const payload: Record<string, unknown> = {
-      role: roleValue,
-      managerId: managerValue ? Number(managerValue) : null,
-      departmentId: departmentValue ? Number(departmentValue) : null,
+      name: nameRef.current?.value || undefined,
+      email: emailRef.current?.value || undefined,
+      role: roleRef.current?.value || 'staff',
+      managerId: managerRef.current?.value ? Number(managerRef.current.value) : null,
+      departmentId: departmentRef.current?.value ? Number(departmentRef.current.value) : null,
     }
-
-    const baseSalaryValue = baseSalaryRef.current?.value
-    if (baseSalaryValue !== undefined && baseSalaryValue !== '') {
-      payload.baseSalary = Number(baseSalaryValue)
-    }
-
-    if (nameValue) {
-      payload.full_name = nameValue
-    }
-
-    if (emailValue) {
-      payload.email = emailValue
-    }
-
     const password = passwordRef.current?.value
-    if (!editing && password) {
-      payload.password = password
-    }
+    if (!editing && password) payload.password = password
 
     try {
       if (editing) {
@@ -201,12 +167,23 @@ export default function Users(): JSX.Element {
         <Card>
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gap: 12 }}>
-              <Input label="Name" ref={nameRef} defaultValue={editing?.name || editing?.full_name || editing?.fullName || ''} />
-              <Input label="Email" ref={emailRef} defaultValue={editing?.email || ''} type="email" />
-              {!editing && <Input label="Password" ref={passwordRef} type="password" />}
+              <label className="field">
+                <span className="field-label">Name</span>
+                <input type="text" className="input" ref={nameRef} defaultValue={editing?.name || editing?.full_name || editing?.fullName || ''} />
+              </label>
+              <label className="field">
+                <span className="field-label">Email</span>
+                <input type="email" className="input" ref={emailRef} defaultValue={editing?.email || ''} />
+              </label>
+              {!editing && (
+                <label className="field">
+                  <span className="field-label">Password</span>
+                  <input type="password" className="input" ref={passwordRef} />
+                </label>
+              )}
               <label className="field">
                 <span className="field-label">Role</span>
-                <select className="input" ref={roleRef} defaultValue={editing?.role || editing?.roles || 'staff'} onChange={(e) => setSelectedRole(e.target.value)}>
+                <select className="input" ref={roleRef} defaultValue={editing?.role || editing?.roles || 'staff'}>
                   <option value="admin">admin</option>
                   <option value="manager">manager</option>
                   <option value="staff">staff</option>
@@ -234,17 +211,7 @@ export default function Users(): JSX.Element {
                   })}
                 </select>
               </label>
-              {(selectedRole === 'manager' || selectedRole === 'staff') && (
-                <Input
-                  label="Base Salary"
-                  ref={baseSalaryRef}
-                  type="number"
-                  defaultValue={(() => {
-                    const v = getUserBaseSalary(editing)
-                    return v != null ? String(v) : ''
-                  })()}
-                />
-              )}
+
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)} disabled={submitting}>Cancel</Button>
                 <Button type="submit" loading={submitting}>{editing ? 'Update user' : 'Create user'}</Button>
@@ -262,7 +229,6 @@ export default function Users(): JSX.Element {
                 <th className="table-header">Name</th>
                 <th className="table-header">Email</th>
                 <th className="table-header">Role</th>
-                <th className="table-header">Base Salary</th>
                 <th className="table-header">Department</th>
                 <th className="table-header">Manager</th>
                 <th className="table-header">Actions</th>
@@ -270,9 +236,9 @@ export default function Users(): JSX.Element {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="table-cell">Loading users...</td></tr>
+                <tr><td colSpan={6} className="table-cell">Loading users...</td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={7} className="table-cell">No users found</td></tr>
+                <tr><td colSpan={6} className="table-cell">No users found</td></tr>
               ) : (
                 users.map((user) => {
                   const userId = getUserId(user)
@@ -286,10 +252,6 @@ export default function Users(): JSX.Element {
                       <td className="table-cell">{getUserLabel(user)}</td>
                       <td className="table-cell">{user.email || '—'}</td>
                       <td className="table-cell">{user.role || user.roles || 'staff'}</td>
-                      <td className="table-cell">{(() => {
-                        const v = getUserBaseSalary(user)
-                        return v != null ? Number(v).toLocaleString() : '—'
-                      })()}</td>
                       <td className="table-cell">{departmentName}</td>
                       <td className="table-cell">{managerName}</td>
                       <td className="table-cell">

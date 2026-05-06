@@ -6,20 +6,32 @@ interface BackendResponse<T> {
   data: T
 }
 
+export interface UserReference {
+  id: number
+  name: string
+  email?: string
+  department?: string | null
+}
+
 export interface AttendanceItem {
   id: number
   status?: string
   clock_in?: string
   clock_out?: string
   date?: string
+  date?: string
   createdAt?: string
+  user?: UserReference
 }
 
 export interface LeaveItem {
   id: number
   user_id?: number
+  user_id?: number
+  user?: UserReference
   department_id?: number | null
   approved_by?: number | null
+  approvedBy?: UserReference
   type?: string
   status?: string
   start_date?: string
@@ -38,8 +50,11 @@ export interface CreateLeaveRequestInput {
 export interface ReimbursementItem {
   id: number
   user_id?: number
+  user_id?: number
+  user?: UserReference
   department_id?: number | null
   approved_by?: number | null
+  approvedBy?: UserReference
   payroll_id?: number | null
   title?: string
   description?: string
@@ -73,7 +88,9 @@ export interface PayrollItem {
   total_allowance?: number | string
   total_deduction?: number | string
   status?: string
+  status?: string
   generated_at?: string
+  user?: UserReference
   items?: PayrollAdjustmentItem[]
 }
 
@@ -109,7 +126,9 @@ export interface UserItem {
   department_id?: number | null
   department_name?: string | null
   manager_id?: number | null
+  manager_id?: number | null
   managerId?: number | null
+  manager?: UserReference
   name?: string | null
   full_name?: string | null
   fullName?: string | null

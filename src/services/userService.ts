@@ -3,6 +3,7 @@ import { ApiError } from '../utils/apiError';
 import { activityLogService } from './activityLogService';
 import { profileService } from './profileService';
 import pool from './db';
+import { enrichWithUserAndApprover } from '../utils/userEnricher';
 
 type UserCreateInput = {
   departmentId?: number | null;
@@ -87,7 +88,7 @@ export const userService = {
        LEFT JOIN users m ON m.user_id = u.manager_id
        ORDER BY u.user_id ASC`
     );
-    return result.rows;
+    return enrichWithUserAndApprover(result.rows);
   },
 
   async listManagers() {
@@ -105,7 +106,7 @@ export const userService = {
        ORDER BY u.user_id ASC`
     );
 
-    return result.rows;
+    return enrichWithUserAndApprover(result.rows);
   },
 
   async listDepartments() {

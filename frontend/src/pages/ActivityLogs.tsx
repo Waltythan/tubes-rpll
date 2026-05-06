@@ -28,7 +28,7 @@ function formatEntity(item: ActivityLogItem): string {
 }
 
 function formatUser(item: ActivityLogItem): string {
-  return `User #${item.user_id}`
+  return item.user?.name || 'Unknown User'
 }
 
 export default function ActivityLogs(): JSX.Element {

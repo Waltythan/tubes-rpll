@@ -1,6 +1,7 @@
 import pool from './db';
 import { ApiError } from '../utils/apiError';
 import { activityLogService } from './activityLogService';
+import { enrichWithUserAndApprover } from '../utils/userEnricher';
 
 const strictDepartmentApproval = String(process.env.STRICT_DEPARTMENT_APPROVAL || '').toLowerCase() === 'true';
 
@@ -135,7 +136,7 @@ export const reimbursementService = {
        ORDER BY request_date DESC`,
       [userId]
     );
-    return result.rows;
+    return enrichWithUserAndApprover(result.rows);
   },
 
   async listTeam(managerId: number, role: 'admin' | 'manager' | 'staff') {
@@ -146,7 +147,7 @@ export const reimbursementService = {
          JOIN users u ON u.user_id = r.user_id
          ORDER BY request_date DESC`
       );
-      return all.rows;
+      return enrichWithUserAndApprover(all.rows);
     }
 
     if (role !== 'manager') {
@@ -171,6 +172,6 @@ export const reimbursementService = {
       [managerId]
     );
 
-    return team.rows;
+    return enrichWithUserAndApprover(team.rows);
   },
 };

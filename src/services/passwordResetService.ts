@@ -54,7 +54,7 @@ export const passwordResetService = {
     const result = await pool.query(
       `SELECT prr.id,
               prr.user_id,
-              COALESCE(p.full_name, u.name) AS user_name,
+              COALESCE(p.full_name, u.email) AS user_name,
               u.email,
               prr.created_at
        FROM password_reset_requests prr

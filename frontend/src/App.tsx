@@ -67,9 +67,9 @@ export default function App(): JSX.Element {
           <Route path="/users" element={<Users />} />
           <Route path="/admin/profiles/:userId" element={<AdminEditProfile />} />
           <Route path="/admin/payroll" element={<AdminPayroll />} />
+          <Route path="/admin/payroll/legacy" element={<PayrollAdmin />} />
           <Route path="/activity-logs" element={<ActivityLogs />} />
           <Route path="/admin/attendance" element={<AdminAttendance />} />
-          <Route path="/admin/payroll" element={<PayrollAdmin />} />
         </Route>
 
         {/* Catch-all redirect */}

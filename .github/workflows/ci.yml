@@ -26,16 +26,16 @@ jobs:
         run: npm install
 
       - name: Lint backend
-        run: npm run lint || echo "No lint script"
+        run: npm run lint
 
       - name: Type check backend
         run: npx tsc --noEmit
 
       - name: Test backend
-        run: npm run test || echo "No tests yet"
+        run: npm run test
 
       - name: Build backend
-        run: npm run build || echo "No build script"
+        run: npm run build
 
       # ========================
       # FRONTEND
@@ -46,7 +46,7 @@ jobs:
 
       - name: Lint frontend
         working-directory: ./frontend
-        run: npm run lint || echo "No lint script"
+        run: npm run lint
 
       - name: Type check frontend
         working-directory: ./frontend
@@ -54,7 +54,7 @@ jobs:
 
       - name: Test frontend
         working-directory: ./frontend
-        run: npm run test || echo "No tests yet"
+        run: npm run test
 
       - name: Build frontend
         working-directory: ./frontend

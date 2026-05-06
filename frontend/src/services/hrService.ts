@@ -174,7 +174,10 @@ export const hrService = {
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
-  generatePayroll: ({ month, year }: GeneratePayrollInput) => postData<PayrollItem>('/payroll/generate', { month, year }),
+  generatePayroll: ({ month, year }: GeneratePayrollInput) => {
+    const period = new Date(Date.UTC(year, month - 1, 1)).toISOString().slice(0, 10)
+    return postData<PayrollItem>('/payroll/generate', { period })
+  },
   addPayrollItem: (payrollId: number, data: AddPayrollItemInput) => postData<PayrollAdjustmentItem>(`/payroll/${payrollId}/items`, {
     type: data.type,
     amount: data.amount,

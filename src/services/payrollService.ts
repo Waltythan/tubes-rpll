@@ -1,7 +1,7 @@
-import pool from './db';
 import { ApiError } from '../utils/apiError';
-import { activityLogService } from './activityLogService';
 import { enrichWithUserAndApprover } from '../utils/userEnricher';
+import { activityLogService } from './activityLogService';
+import pool from './db';
 
 async function recalculatePayrollTotals(client: { query: Function }, params: {
   payrollId: number;
@@ -169,6 +169,16 @@ export const payrollService = {
        WHERE user_id = $1
        ORDER BY period_start DESC`,
       [userId]
+    );
+
+    return enrichWithUserAndApprover(result.rows);
+  },
+
+  async listAll() {
+    const result = await pool.query(
+      `SELECT id, user_id, period_start, period_end, total_allowance, total_deduction, net_salary, status, generated_at
+       FROM payrolls
+       ORDER BY period_start DESC, user_id ASC`
     );
 
     return enrichWithUserAndApprover(result.rows);

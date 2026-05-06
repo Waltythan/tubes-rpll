@@ -201,6 +201,7 @@ export const hrService = {
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
+  payrollAll: () => getData<PayrollItem[]>('/payroll/all'),
   generatePayroll: ({ month, year }: GeneratePayrollInput) => postData<PayrollGenerationResult>('/payroll/generate', { month, year }),
   addPayrollItem: (payrollId: number, data: AddPayrollItemInput) => postData<PayrollAdjustmentItem>(`/payroll/${payrollId}/items`, {
     type: data.type,

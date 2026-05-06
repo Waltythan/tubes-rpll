@@ -1,10 +1,10 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { jwtAuth, AuthRequest } from '../middleware/auth';
+import { AuthRequest, jwtAuth } from '../middleware/auth';
 import { requireRoles } from '../middleware/rbac';
 import { payrollService } from '../services/payrollService';
 import { sendResponse } from '../utils/apiResponse';
-import { parseWithSchema, payrollAdjustmentSchema, payrollGenerateSchema, positiveIntSchema } from '../utils/requestValidation';
 import { extractClientIp } from '../utils/ipCheck';
+import { parseWithSchema, payrollAdjustmentSchema, payrollGenerateSchema, positiveIntSchema } from '../utils/requestValidation';
 
 const router = express.Router();
 
@@ -56,6 +56,15 @@ router.get('/me', requireRoles('staff', 'manager', 'admin'), async (req: AuthReq
   try {
     const rows = await payrollService.listOwn(parseWithSchema(positiveIntSchema, req.user!.id));
     sendResponse(res, 200, 'Own payroll fetched', rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/all', requireRoles('admin'), async (_req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const rows = await payrollService.listAll();
+    sendResponse(res, 200, 'All payroll fetched', rows);
   } catch (error) {
     next(error);
   }

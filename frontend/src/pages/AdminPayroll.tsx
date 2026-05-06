@@ -46,7 +46,6 @@ export default function AdminPayroll(): JSX.Element {
       try {
         setLoadingPayrolls(true)
         const data = await hrService.getAllPayrolls()
-        const data = await hrService.payrollAll()
         if (!active) return
         setPayrolls(data || [])
       } catch (err: unknown) {
@@ -62,7 +61,6 @@ export default function AdminPayroll(): JSX.Element {
 
   async function refreshPayrolls(): Promise<void> {
     const data = await hrService.getAllPayrolls()
-    const data = await hrService.payrollAll()
     setPayrolls(data || [])
   }
 

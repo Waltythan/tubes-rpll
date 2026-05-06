@@ -26,13 +26,7 @@ app.set('trust proxy', 1);
 // --- 1. MIDDLEWARE ---
 app.use(express.json());
 app.use(cors({
-    origin: [
-    'http://localhost',      // Origin dari error kamu
-    'http://localhost:80',   // Origin alternatif
-    'http://localhost:3000', // Jika kamu pakai React dev server (Vite/CRA)
-    'http://localhost:5173', // Jika kamu pakai Vite default dev server
-    'http://127.0.0.1'       // Untuk jaga-jaga
-    ],
+    origin: process.env.NODE_ENV === 'production' ? [process.env.CLIENT_URL || 'http://localhost:5173'] : true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Retry-After', 'RateLimit-Reset', 'X-RateLimit-Reset'],

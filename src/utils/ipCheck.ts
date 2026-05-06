@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
+const ALLOWED_NETWORK = process.env.ALLOWED_NETWORK || process.env.OFFICE_IP_PREFIX || '192.168.';
 const OFFICE_IP_PREFIX = process.env.OFFICE_IP_PREFIX || '192.168.';
 const OFFICE_IP = process.env.OFFICE_IP || '';
 
@@ -18,6 +19,10 @@ export function getClientIp(req: Partial<Pick<Request, 'headers' | 'socket' | 'i
 
 export function extractClientIp(req: Partial<Pick<Request, 'headers' | 'socket' | 'ip'>>) {
   return getClientIp(req);
+}
+
+export function isAllowedNetwork(ip: string) {
+  return normalizeIp(ip).startsWith(ALLOWED_NETWORK);
 }
 
 function isLocalhostIp(ip: string): boolean {

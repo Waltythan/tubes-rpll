@@ -24,7 +24,7 @@ interface BannerState {
   message: string
 }
 
-const QR_TTL_SECONDS = 30
+const QR_TTL_SECONDS = 180
 
 function formatTime(isoString: string | null | undefined): string {
   if (!isoString) return '—'
@@ -60,10 +60,22 @@ function getDateKey(value: string | null | undefined): string {
 function mapAttendanceError(action: 'check-in' | 'check-out', errorMessage: string): string {
   const normalized = errorMessage.toLowerCase()
 
-  if (normalized.includes('office network') || normalized.includes('jaringan kantor') || normalized.includes('ip anda')) {
+  if (normalized.includes('office wifi') || normalized.includes('office network') || normalized.includes('jaringan kantor')) {
     return action === 'check-in'
-      ? 'You must be in office network to check in.'
-      : 'You must be in office network to check out.'
+      ? 'You must be connected to office WiFi.'
+      : 'You must be connected to office WiFi.'
+  }
+
+  if (normalized.includes('already checked in today') || normalized.includes('sudah melakukan check-in')) {
+    return 'You have already checked in today.'
+  }
+
+  if (normalized.includes('qr already used')) {
+    return 'QR already used.'
+  }
+
+  if (normalized.includes('qr expired or invalid') || normalized.includes('tidak valid') || normalized.includes('kedaluwarsa')) {
+    return 'QR expired or invalid.'
   }
 
   return errorMessage
@@ -98,6 +110,19 @@ export default function Attendance(): JSX.Element {
   }, [attendanceList, todayKey])
 
   const qrExpired = qrToken ? countdown <= 0 : true
+  const qrLink = useMemo(() => {
+    if (!qrToken) return ''
+
+    try {
+      const backendUrl = new URL(qrToken.qrUrl)
+      if (backendUrl.hostname === 'localhost' || backendUrl.hostname === '127.0.0.1') {
+        return `${window.location.origin}/attendance/confirm?token=${encodeURIComponent(qrToken.qrToken)}`
+      }
+      return qrToken.qrUrl
+    } catch {
+      return `${window.location.origin}/attendance/confirm?token=${encodeURIComponent(qrToken.qrToken)}`
+    }
+  }, [qrToken])
 
   function clearBannerSoon(message: BannerState): void {
     setBanner(message)
@@ -211,37 +236,6 @@ export default function Attendance(): JSX.Element {
     }
   }, [qrToken?.expiresAt])
 
-  const handleCheckIn = async (): Promise<void> => {
-    if (!qrToken?.qrToken) {
-      setBanner({ tone: 'danger', message: 'Generate a QR code first.' })
-      return
-    }
-
-    if (qrExpired) {
-      setBanner({ tone: 'warning', message: 'QR token expired. Generate a new QR code.' })
-      return
-    }
-
-    try {
-      setActionLoading(true)
-      setBanner(null)
-
-      await hrService.checkIn(qrToken.qrToken)
-
-      clearBannerSoon({ tone: 'success', message: 'Check-in successful.' })
-      showToast('Check-in successful!', 'success')
-      setQrToken(null)
-      setCountdown(0)
-      await refreshAttendance(true)
-    } catch (err: unknown) {
-      const errorMsg = mapAttendanceError('check-in', err instanceof Error ? err.message : 'Check-in failed')
-      showToast(errorMsg, 'error')
-      setBanner({ tone: 'danger', message: errorMsg })
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
   const handleCheckOut = async (): Promise<void> => {
     if (!todayStatus.checkedIn) {
       setBanner({ tone: 'warning', message: 'You must check in first before checking out.' })
@@ -271,10 +265,6 @@ export default function Attendance(): JSX.Element {
     }
   }
 
-  const handleScanQr = async (): Promise<void> => {
-    await handleCheckIn()
-  }
-
   const todayBadgeTone = !todayStatus.checkedIn ? 'danger' : todayStatus.checkedOut ? 'primary' : 'success'
   const latenessTone = todayStatus.status?.toLowerCase() === 'late' ? 'warning' : 'success'
 
@@ -285,7 +275,7 @@ export default function Attendance(): JSX.Element {
         <div>
           <p className="eyebrow">Attendance</p>
           <h2>Attendance dashboard</h2>
-          <p className="muted">Generate a QR, confirm attendance, and review your latest activity in one place.</p>
+          <p className="muted">Show the QR on screen, scan it with a phone, and confirm attendance from the linked page.</p>
         </div>
       </div>
 
@@ -325,10 +315,10 @@ export default function Attendance(): JSX.Element {
           <div className="section-header">
             <div>
               <p className="eyebrow">QR attendance</p>
-              <h3>Generate and confirm check-in</h3>
+              <h3>Attendance QR</h3>
             </div>
             <Button type="button" variant="ghost" onClick={() => void generateQr()} disabled={qrLoading || actionLoading}>
-              {qrLoading ? 'Generating...' : qrToken ? 'Regenerate QR' : 'Generate QR'}
+              {qrLoading ? 'Generating...' : qrToken ? 'Refresh QR' : 'Generate QR'}
             </Button>
           </div>
 
@@ -336,37 +326,16 @@ export default function Attendance(): JSX.Element {
             {qrToken ? (
               <div className="attendance-qr-fade">
                 <div className="attendance-qr-shell">
-                  <QRCodeSVG value={qrToken.qrToken} size={168} level="M" includeMargin className="attendance-qr-code" />
+                  <QRCodeSVG value={qrLink} size={168} level="M" includeMargin className="attendance-qr-code" />
                 </div>
-                <p className="attendance-countdown">Expires in {countdown}s</p>
-                <p className="muted attendance-qr-helper">Use the QR above, then confirm to check in.</p>
+                <p className="attendance-countdown">QR expires in {countdown}s</p>
+                <p className="muted attendance-qr-helper">Scan this QR with your phone to open the confirm page.</p>
               </div>
             ) : (
               <div className="attendance-empty-qr">
-                <p className="empty-state">Generate a QR code to start your attendance check-in.</p>
+                <p className="empty-state">Generate a QR code to start the attendance confirmation flow.</p>
               </div>
             )}
-          </div>
-
-          <div className="attendance-action-row">
-            <Button
-              type="button"
-              variant="primary"
-              onClick={() => void handleScanQr()}
-              disabled={actionLoading || qrLoading || !qrToken || qrExpired || todayStatus.checkedOut}
-              fullWidth
-            >
-              {actionLoading ? 'Confirming...' : 'Scan / Confirm Check-in'}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => void generateQr()}
-              disabled={qrLoading || actionLoading}
-              fullWidth
-            >
-              {qrToken ? 'Refresh QR' : 'Generate QR'}
-            </Button>
           </div>
 
           <div className="attendance-action-row attendance-followup-row">
@@ -376,7 +345,7 @@ export default function Attendance(): JSX.Element {
               </Button>
             ) : (
               <Button type="button" variant="ghost" onClick={() => void generateQr()} disabled={qrLoading || actionLoading || loading} fullWidth>
-                {todayStatus.checkedOut ? 'Attendance completed' : 'Check In'}
+                {todayStatus.checkedOut ? 'Attendance completed' : 'Refresh QR'}
               </Button>
             )}
           </div>

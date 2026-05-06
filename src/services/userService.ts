@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import { ApiError } from '../utils/apiError';
 import { activityLogService } from './activityLogService';
-import pool from './db';
 
 type UserCreateInput = {
   departmentId?: number | null;
@@ -122,9 +121,9 @@ export const userService = {
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
     const result = await pool.query(
-      `INSERT INTO users (department_id, name, email, password, role, base_salary, manager_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING user_id, department_id, name, email, role, base_salary, manager_id, "createdAt"`,
+      `INSERT INTO users (department_id, email, password, role, base_salary, manager_id, "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
       [
         input.departmentId || null,
         input.name || null,
@@ -171,12 +170,12 @@ export const userService = {
     const result = await pool.query(
       `UPDATE users
        SET department_id = COALESCE($2, department_id),
-           name = COALESCE($3, name),
-           email = COALESCE($4, email),
-           password = COALESCE($5, password),
-           role = COALESCE($6, role),
-           base_salary = COALESCE($7, base_salary),
-           manager_id = COALESCE($8, manager_id)
+           email = COALESCE($3, email),
+           password = COALESCE($4, password),
+           role = COALESCE($5, role),
+           base_salary = COALESCE($6, base_salary),
+           manager_id = COALESCE($7, manager_id),
+           "updatedAt" = NOW()
        WHERE user_id = $1
        RETURNING user_id, department_id, name, email, role, base_salary, manager_id, "createdAt"`,
       [

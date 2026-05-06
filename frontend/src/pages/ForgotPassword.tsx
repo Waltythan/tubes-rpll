@@ -65,55 +65,7 @@ export default function ForgotPassword(): JSX.Element {
           <h1>Reset access</h1>
           <p className="muted">Request a password reset link without revealing whether the email is registered.</p>
         </div>
-
-        <Card className="auth-card">
-          <div className="page-heading compact">
-            <div>
-              <p className="eyebrow">Account recovery</p>
-              <h2>Forgot password</h2>
-            </div>
-          </div>
-
-          <div className="recovery-grid">
-            <div className="recovery-desc">
-              <p className="eyebrow">Account recovery</p>
-              <h3>Forgot password</h3>
-              <p className="muted">Enter your email and we'll send a reset token. In development you'll be redirected automatically to the reset page.</p>
-
-              <ul className="step-list">
-                <li className="step-item"><div className="step-bullet">1</div><div className="step-copy">Enter your company email</div></li>
-                <li className="step-item"><div className="step-bullet">2</div><div className="step-copy">Receive reset token (dev) or email link</div></li>
-                <li className="step-item"><div className="step-bullet">3</div><div className="step-copy">Set a new password and sign in</div></li>
-              </ul>
-            </div>
-
-            <div className="recovery-form">
-              <form className="form-grid" onSubmit={submit}>
-                <Input
-                  label="Email"
-                  type="email"
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled={submitting}
-                  helperText={emailError || 'Use your company email address'}
-                />
-
-                {apiError && <div className="alert alert-error">{apiError}</div>}
-                {successMessage && <div className="alert alert-success">{successMessage}</div>}
-
-                <Button type="submit" variant="primary" fullWidth disabled={submitting}>
-                  {submitting ? 'Sending...' : 'Send Reset Link'}
-                </Button>
-
-                <div className="auth-links">
-                  <Link to="/login">Back to login</Link>
-                </div>
-              </form>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </div>
+      </form>
+    </AuthLayout>
   )
 }

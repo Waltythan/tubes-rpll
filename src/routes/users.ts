@@ -5,7 +5,6 @@ import { userService } from '../services/userService';
 import { ApiError } from '../utils/apiError';
 import { sendResponse } from '../utils/apiResponse';
 import { extractClientIp } from '../utils/ipCheck';
-import { parseWithSchema, positiveIntSchema, userCreateSchema, userUpdateSchema } from '../utils/requestValidation';
 
 const router = express.Router();
 
@@ -50,8 +49,8 @@ router.post('/', requireRoles('admin'), async (req: AuthRequest, res: Response, 
     const userAgent = req.headers['user-agent'] as string | undefined;
 
     const created = await userService.createUser(
-      parseWithSchema(userCreateSchema, body),
-      parseWithSchema(positiveIntSchema, creatorId),
+      validatedPayload,
+      parseWithSchema(positiveIntSchema, req.user!.id),
       { ipAddress: clientIp, userAgent: userAgent }
     );
     sendResponse(res, 201, 'User created', created);
@@ -65,14 +64,24 @@ router.patch('/:userId', requireRoles('admin'), async (req: AuthRequest, res: Re
     const userId = parseWithSchema(positiveIntSchema, req.params.userId);
     const clientIp = extractClientIp(req as Request);
     const userAgent = req.headers['user-agent'] as string | undefined;
-    const body = req.body || {};
-    const updaterId = req.user?.id;
-    if (!updaterId) throw new ApiError(401, 'Authenticated user id is missing');
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    if (isDev) {
+      console.log('Incoming user payload:', req.body);
+    }
+
+    const sanitizedPayload = stripUndefinedFields(sanitizeUserPayload(req.body));
+
+    if (isDev) {
+      console.log('Sanitized payload:', sanitizedPayload);
+    }
+
+    const validatedPayload = parseWithSchema(userUpdateSchema, sanitizedPayload);
 
     const updated = await userService.updateUser(
       userId,
-      parseWithSchema(userUpdateSchema, body),
-      parseWithSchema(positiveIntSchema, updaterId),
+      validatedPayload,
+      parseWithSchema(positiveIntSchema, req.user!.id),
       { ipAddress: clientIp, userAgent: userAgent }
     );
 

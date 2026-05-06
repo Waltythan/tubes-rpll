@@ -28,7 +28,6 @@ export const isoDateSchema = z
   .refine(isValidIsoDate, 'Tanggal tidak valid');
 
 export const loginSchema = z.object({
-<<<<<<< HEAD
   email: z.string().trim().nonempty('Email is required').email('Format email tidak valid').transform((s) => s.toLowerCase()),
   password: z.string().nonempty('Password is required').min(8, 'Password minimal 8 karakter'),
 });
@@ -40,19 +39,6 @@ export const forgotPasswordSchema = z.object({
 export const resetPasswordSchema = z.object({
   token: z.string().trim().nonempty('Token is required').min(10, 'Token reset tidak valid'),
   newPassword: z.string().nonempty('New password is required').min(8, 'Password minimal 8 karakter'),
-=======
-  email: z.string().trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
-  password: z.string().min(8, 'Password minimal 8 karakter'),
-});
-
-export const forgotPasswordSchema = z.object({
-  email: z.string().trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
-});
-
-export const resetPasswordSchema = z.object({
-  token: z.string().min(10, 'Token reset tidak valid'),
-  newPassword: z.string().min(8, 'Password minimal 8 karakter'),
->>>>>>> cc214f67b337b38257fc396dc3ca8ecb83809c23
 });
 
 export const profileUpdateSchema = z.object({
@@ -158,7 +144,7 @@ export function parseWithSchema<T>(schema: z.ZodType<T>, data: unknown): T {
   if (!result.success) {
     const details = result.error.issues.map((issue) => ({
       path: issue.path.join('.') || 'root',
-      message: formatZodIssueMessage(issue),
+      message: issue.message,
       code: issue.code,
     }));
 
@@ -172,7 +158,6 @@ export function parseWithSchema<T>(schema: z.ZodType<T>, data: unknown): T {
   return result.data;
 }
 
-<<<<<<< HEAD
 export function stripUndefinedFields<T extends Record<string, unknown>>(obj: T | undefined): T | {} {
   if (!obj || typeof obj !== 'object') return {}
   const out: Record<string, unknown> = {}
@@ -195,17 +180,4 @@ export function sanitizeUserPayload(payload: Record<string, unknown> | undefined
     if (Object.prototype.hasOwnProperty.call(payload, key)) out[key] = (payload as any)[key]
   }
   return out
-=======
-function formatZodIssueMessage(issue: z.ZodIssue): string {
-  if (issue.code === 'invalid_type') {
-    const field = issue.path.join('.') || 'field';
-    const rawMessage = issue.message.toLowerCase();
-
-    if (rawMessage.includes('undefined')) {
-      return `Field '${field}' is required`;
-    }
-  }
-
-  return issue.message;
->>>>>>> cc214f67b337b38257fc396dc3ca8ecb83809c23
 }

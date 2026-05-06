@@ -157,6 +157,7 @@ async function patchData<T>(path: string, data?: unknown): Promise<T> {
 
 export interface QrTokenResponse {
   qrToken: string
+  qrUrl: string
   expiresIn: number
   expiresAt: string
 }
@@ -231,6 +232,7 @@ export const hrService = {
   // Attendance actions
   getQrToken: () => getData<QrTokenResponse>('/attendance/qr'),
   checkIn: (qrToken: string) => postData<CheckInResponse>('/attendance/check-in', { qrToken }),
+  confirmAttendance: (token: string) => postData<CheckInResponse>('/attendance/confirm', { token }),
   checkOut: () => postData<CheckInResponse>('/attendance/check-out', {}),
 
   // Team attendance (for managers)

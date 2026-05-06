@@ -29,7 +29,9 @@ function parseRetryAfterSeconds(error: AxiosError): number | undefined {
 }
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000` : 'http://localhost:5000'),
   headers: {
     'Content-Type': 'application/json',
   },

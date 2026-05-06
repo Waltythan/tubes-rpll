@@ -119,6 +119,7 @@ export default function Profile(): JSX.Element {
     setSuccess(null)
     try {
       const payload = {
+        full_name: profile.full_name || undefined,
         address: profile.address || undefined,
         phone_number: profile.phone_number || undefined,
         profile_picture_url: profile.profile_picture_url ? profile.profile_picture_url : null,

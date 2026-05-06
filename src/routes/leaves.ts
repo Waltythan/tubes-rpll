@@ -16,6 +16,7 @@ router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequ
       startDate: req.body?.startDate,
       endDate: req.body?.endDate,
       type: req.body?.type || 'annual',
+      reason: req.body?.reason,
       attachmentUrl: typeof req.body?.attachmentUrl === 'string' ? req.body.attachmentUrl : undefined,
     });
 
@@ -27,6 +28,7 @@ router.post('/', requireRoles('staff', 'manager', 'admin'), async (req: AuthRequ
       startDate: payload.startDate,
       endDate: payload.endDate,
       type: payload.type,
+      reason: payload.reason,
       attachmentUrl: payload.attachmentUrl,
       ipAddress: clientIp,
       userAgent: userAgent,

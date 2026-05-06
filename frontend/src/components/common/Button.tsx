@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import LoadingSpinner from './LoadingSpinner'
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 type ButtonSize = 'small' | 'medium' | 'large'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -20,6 +20,7 @@ export default function Button({ children, variant = 'primary', size = 'medium',
         variant === 'primary' ? 'btn-primary' : '',
         variant === 'secondary' ? 'btn-secondary' : '',
         variant === 'ghost' ? 'btn-ghost' : '',
+        variant === 'danger' ? 'btn-danger' : '',
         size === 'small' ? 'btn-small' : '',
         size === 'large' ? 'btn-large' : '',
         fullWidth ? 'btn-full' : '',

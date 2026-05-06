@@ -141,11 +141,12 @@ export default function Reimbursement(): JSX.Element {
     <div className="page-stack">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Reimbursement</p>
-          <h2>Expense claims</h2>
+          <p className="eyebrow">Finance</p>
+          <h2>My Expense Claims</h2>
+          <p className="muted">Submit receipts and track your reimbursement requests.</p>
         </div>
-        <Button type="button" onClick={() => setIsFormOpen((current) => !current)} loading={submitting}>
-          {isFormOpen ? 'Hide request form' : 'Request Reimbursement'}
+        <Button type="button" variant={isFormOpen ? 'secondary' : 'primary'} onClick={() => setIsFormOpen((current) => !current)} loading={submitting}>
+          {isFormOpen ? 'Hide request form' : 'New Reimbursement'}
         </Button>
       </div>
 
@@ -153,63 +154,80 @@ export default function Reimbursement(): JSX.Element {
 
       {isFormOpen && (
         <Card>
+          <div className="section-header" style={{ marginBottom: '20px' }}>
+            <div>
+              <p className="eyebrow">Submission</p>
+              <h3 style={{ margin: 0 }}>Create Expense Claim</h3>
+            </div>
+          </div>
           <ReimbursementForm onSubmitted={handleReimbursementCreated} onClose={() => setIsFormOpen(false)} />
         </Card>
       )}
 
       {loading ? (
-        <Card>
-          <SkeletonLoader lines={4} height={18} />
-        </Card>
+        <div style={{ padding: '40px', textAlign: 'center' }}>
+          <p className="muted">Loading your claims...</p>
+        </div>
       ) : (
         <div className="grid grid-3">
           {items.length > 0 ? (
             items.map((item) => (
-              <Card key={item.id}>
-                <div className="section-header">
-                  <div className="leave-card-header">
-                    <div>
-                      <p className="card-title">{item.title || 'Expense'} #{item.id}</p>
-                      <p className="muted">{item.description || 'No description provided'}</p>
-                      <p className="card-value">{formatAmount(item.amount)}</p>
-                    </div>
-                    <div className="prominent-status">
-                      <StatusBadge status={item.status || 'pending'} />
-                      {item.approvedBy ? (
-                        <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }} title={item.approvedBy.email}>
-                          Approved by: {item.approvedBy.name}
-                        </div>
-                      ) : item.approved_by ? (
-                        <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
-                          Approved by: Unknown Approver
-                        </div>
-                      ) : null}
-                      {item.updatedAt && (
-                        <div className="muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
-                          {new Date(item.updatedAt).toLocaleString()}
-                        </div>
-                      )}
-                      {item.attachment_url && (
-                        <div className="reimbursement-attachment-actions">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="small"
-                            onClick={() => openAttachment(item.attachment_url!, `${item.title || 'Reimbursement'} #${item.id}`)}
-                          >
-                            View attachment
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+              <Card key={item.id} className="request-card">
+                <div className="section-header" style={{ marginBottom: '16px' }}>
+                  <div>
+                    <p className="eyebrow" style={{ color: 'var(--primary)' }}>Receipt #{item.id}</p>
+                    <h3 style={{ margin: '4px 0', fontSize: '1.1rem' }}>{item.title || 'Untitled Expense'}</h3>
+                    <p className="muted small" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+                      {item.description || 'No description'}
+                    </p>
                   </div>
+                  <StatusBadge status={item.status || 'pending'} />
+                </div>
+
+                <div className="reimbursement-amount">
+                  {formatAmount(item.amount)}
+                </div>
+
+                <div className="card-details-grid" style={{ marginBottom: '12px' }}>
+                  <div className="detail-item">
+                    <span className="label">Date</span>
+                    <span className="value">{item.request_date ? new Date(item.request_date).toLocaleDateString() : '-'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="label">Attachment</span>
+                    <span className="value">
+                      {item.attachment_url ? (
+                        <button 
+                          className="link-btn" 
+                          style={{ fontSize: '0.8rem', padding: 0, border: 'none', background: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }}
+                          onClick={() => openAttachment(item.attachment_url!, `${item.title} #${item.id}`)}
+                        >
+                          View Receipt
+                        </button>
+                      ) : 'None'}
+                    </span>
+                  </div>
+                </div>
+
+                {item.approvedBy && (
+                  <div className="approver-info">
+                    <span className="label">Processed by</span>
+                    <span className="value">{item.approvedBy.name}</span>
+                  </div>
+                )}
+                
+                <div className="card-footer-timestamp">
+                  Updated: {new Date(item.updatedAt || item.request_date || 0).toLocaleString()}
                 </div>
               </Card>
             ))
           ) : (
-            <Card>
-              <EmptyState />
-            </Card>
+            <div className="grid-full">
+              <EmptyState 
+                title="No expense claims yet"
+                description="Your reimbursement history will appear here once you submit a claim."
+              />
+            </div>
           )}
         </div>
       )}

@@ -19,7 +19,6 @@ export interface AttendanceItem {
   clock_in?: string
   clock_out?: string
   date?: string
-  date?: string
   createdAt?: string
   user?: UserReference
 }
@@ -27,13 +26,13 @@ export interface AttendanceItem {
 export interface LeaveItem {
   id: number
   user_id?: number
-  user_id?: number
   user?: UserReference
   department_id?: number | null
   approved_by?: number | null
   approvedBy?: UserReference
   type?: string
   status?: string
+  reason?: string
   start_date?: string
   end_date?: string
   attachment_url?: string
@@ -49,7 +48,6 @@ export interface CreateLeaveRequestInput {
 
 export interface ReimbursementItem {
   id: number
-  user_id?: number
   user_id?: number
   user?: UserReference
   department_id?: number | null
@@ -82,13 +80,14 @@ export interface PayrollAdjustmentItem {
 
 export interface PayrollItem {
   id: number
+  user_id?: number
   period_start?: string
   period_end?: string
   net_salary?: number | string
   total_allowance?: number | string
   total_deduction?: number | string
   status?: string
-  status?: string
+  base_salary?: number | string
   generated_at?: string
   user?: UserReference
   items?: PayrollAdjustmentItem[]
@@ -125,7 +124,6 @@ export interface UserItem {
   roles?: string
   department_id?: number | null
   department_name?: string | null
-  manager_id?: number | null
   manager_id?: number | null
   managerId?: number | null
   manager?: UserReference
@@ -201,6 +199,9 @@ export const hrService = {
   createReimbursement: (data: CreateReimbursementInput) => postData<ReimbursementItem>('/reimbursements', data),
   decideReimbursement: (reimbursementId: number, decision: 'approved' | 'rejected') => patchData<ReimbursementItem>(`/reimbursements/${reimbursementId}/decision`, { decision }),
   payroll: () => getData<PayrollItem[]>('/payroll/me'),
+  getAllPayrolls: () => getData<PayrollItem[]>('/payroll/all'),
+  addManualAdjustment: (data: { userId: number; month: number; year: number; amount: number; type: 'allowance' | 'deduction'; description: string }) =>
+    postData('/payroll/adjustment', data),
   generatePayroll: ({ month, year }: GeneratePayrollInput) => postData<PayrollGenerationResult>('/payroll/generate', { month, year }),
   addPayrollItem: (payrollId: number, data: AddPayrollItemInput) => postData<PayrollAdjustmentItem>(`/payroll/${payrollId}/items`, {
     type: data.type,
@@ -208,6 +209,7 @@ export const hrService = {
     description: data.description,
     referenceId: data.reference,
   }),
+  getBreakdown: (payrollId: number) => getData<any>(`/payroll/${payrollId}/breakdown`),
 
   // Admin user management
   getUsers: () => getData<UserItem[]>('/users'),

@@ -70,25 +70,37 @@ export const payrollGenerateSchema = z.object({
   period: isoDateSchema.optional(),
 });
 
-export const userCreateSchema = z.object({
-  departmentId: z.number().int().nullable().optional(),
-  name: z.string({ required_error: 'Name is required' }).trim().min(3, 'Name must be at least 3 characters').max(200, 'Name maksimal 200 karakter'),
-  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
-  password: z.string({ required_error: 'Password is required' }).min(8, 'Password minimal 8 karakter'),
-  role: z.enum(['admin', 'manager', 'staff'], { required_error: 'Role is required' }),
-  baseSalary: z.number().nonnegative().optional(),
-  managerId: z.number().int().nullable().optional(),
+const nullablePositiveIntSchema = z.preprocess(
+  (value) => {
+    if (value === '' || value === undefined) {
+      return undefined;
+    }
+    if (value === null) {
+      return null;
+    }
+    return value;
+  },
+  z.coerce.number().int().positive('Harus berupa bilangan bulat positif').nullable().optional()
+);
+
+const userBaseSchema = z.object({
+  departmentId: nullablePositiveIntSchema,
+  email: z.string().trim().email('Format email tidak valid').toLowerCase(),
+  full_name: z.string().trim().min(3).max(200, 'Nama maksimal 200 karakter').optional(),
+  name: z.string().trim().min(3).max(200, 'Nama maksimal 200 karakter').optional(),
+  password: z.string().min(8, 'Password minimal 8 karakter'),
+  role: z.enum(['admin', 'manager', 'staff']),
+  baseSalary: z.coerce.number().nonnegative().optional(),
+  managerId: nullablePositiveIntSchema,
 });
 
-export const userUpdateSchema = z.object({
-  departmentId: z.number().int().nullable().optional(),
-  name: z.string().trim().min(3, 'Name must be at least 3 characters').max(200, 'Name maksimal 200 karakter').optional(),
-  email: z.string().trim().email('Format email tidak valid').transform((s) => s.toLowerCase()).optional(),
-  password: z.string().min(8, 'Password minimal 8 karakter').optional(),
-  role: z.enum(['admin', 'manager', 'staff']).optional(),
-  baseSalary: z.number().nonnegative().optional(),
-  managerId: z.number().int().nullable().optional(),
-});
+export const userCreateSchema = userBaseSchema;
+
+export const userUpdateSchema = userBaseSchema
+  .partial()
+  .extend({
+    email: z.string().trim().email('Format email tidak valid').toLowerCase().optional(),
+  });
 
 export const leaveRequestSchema = z
   .object({
@@ -130,16 +142,17 @@ export function parseWithSchema<T>(schema: z.ZodType<T>, data: unknown): T {
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    const errors = result.error.issues.map((issue) => ({
-      path: issue.path.join('.'),
+    const details = result.error.issues.map((issue) => ({
+      path: issue.path.join('.') || 'root',
       message: issue.message,
       code: issue.code,
     }));
 
-    const message = result.error.issues
-      .map((issue) => issue.message)
+    const message = details
+      .map((issue) => `${issue.path}: ${issue.message}`)
       .join('; ');
-    throw new ApiError(400, message || 'Validation failed', true, errors);
+
+    throw new ApiError(400, message || 'Invalid input', true, details);
   }
 
   return result.data;

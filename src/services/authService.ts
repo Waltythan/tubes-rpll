@@ -3,6 +3,8 @@ import { ApiError } from '../utils/apiError';
 import { generateAccessToken, generatePasswordResetToken, UserRole, verifyPasswordResetToken } from '../utils/jwtHelper';
 import pool from './db';
 
+const latestResetTokens = new Map<string, { token: string; expiresAt: string }>();
+
 type LoginResult = {
   accessToken: string;
   user: {
@@ -100,16 +102,11 @@ export const authService = {
       [user.user_id, token, expiresAt.toISOString()]
     );
 
-    // Demo-friendly: expose token only in development and always log it for local testing.
-    console.log('RESET TOKEN:', token);
+    latestResetTokens.set(email.toLowerCase(), { token, expiresAt: expiresAt.toISOString() });
+  },
 
-    if ((process.env.NODE_ENV || 'development') === 'development') {
-      return {
-        resetToken: token,
-      };
-    }
-
-    return {};
+  getLatestResetToken(email: string) {
+    return latestResetTokens.get(email.toLowerCase()) || null;
   },
 
   async resetPassword(token: string, newPassword: string) {
@@ -156,6 +153,12 @@ export const authService = {
 
     // Mark token as used
     await pool.query(`UPDATE password_reset_tokens SET used = TRUE WHERE id = $1`, [tokenRow.id]);
+
+    for (const [emailKey, storedToken] of latestResetTokens.entries()) {
+      if (storedToken.token === token) {
+        latestResetTokens.delete(emailKey);
+      }
+    }
 
     return;
   },

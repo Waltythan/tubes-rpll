@@ -1,4 +1,5 @@
 import rateLimit from 'express-rate-limit';
+import type { Request } from 'express';
 import { extractClientIp } from '../utils/ipCheck';
 
 const rateLimitMessage = {
@@ -8,11 +9,14 @@ const rateLimitMessage = {
 };
 
 export const loginRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 1 * 60 * 1000,
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => extractClientIp(req),
+  keyGenerator: (req: Request) => {
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    return `${extractClientIp(req)}:${email || 'unknown'}`;
+  },
   message: rateLimitMessage,
 });
 

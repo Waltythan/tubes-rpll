@@ -35,6 +35,7 @@ app.use(cors({
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Retry-After', 'RateLimit-Reset', 'X-RateLimit-Reset'],
     credentials: true
 }));
 

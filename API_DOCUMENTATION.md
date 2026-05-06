@@ -701,10 +701,152 @@ Response (200):
 
 ---
 
+## Image Upload Endpoints
+
+### 1. Upload Image
+**POST** `/upload/image`
+
+**Authentication:** Required (JWT)
+
+**Content-Type:** `multipart/form-data`
+
+**Form Fields:**
+- `file` (required) - Image file (JPEG, PNG, WebP, GIF)
+
+**Constraints:**
+- Max file size: 5MB
+- Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+
+**Response (201):**
+```json
+{
+  "status": "success",
+  "message": "Image uploaded successfully",
+  "data": {
+    "id": 1,
+    "url": "http://localhost:5000/uploads/1715000000_abc123_photo.jpg",
+    "filename": "1715000000_abc123_photo.jpg",
+    "uploadedAt": "2026-05-06T10:30:00.000Z"
+  }
+}
+```
+
+**Errors:**
+- `400` - No file uploaded or invalid file type
+- `413` - File too large
+- `401` - Unauthorized
+- `500` - Server error
+
+**cURL Example:**
+```bash
+curl -X POST http://localhost:5000/upload/image \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "file=@/path/to/image.jpg"
+```
+
+---
+
+### 2. Get Recent Uploads
+**GET** `/upload/recent?limit=20`
+
+**Authentication:** Required (JWT)
+
+**Query Parameters:**
+- `limit` (optional) - Number of images to return (1-50, default: 20)
+
+**Response (200):**
+```json
+{
+  "status": "success",
+  "message": "Recent uploads retrieved",
+  "data": [
+    {
+      "id": 1,
+      "url": "http://localhost:5000/uploads/1715000000_abc123_photo.jpg",
+      "filename": "1715000000_abc123_photo.jpg",
+      "mimeType": "image/jpeg",
+      "fileSize": 245632,
+      "uploadedAt": "2026-05-06T10:30:00.000Z"
+    },
+    {
+      "id": 2,
+      "url": "http://localhost:5000/uploads/1715000100_def456_receipt.png",
+      "filename": "1715000100_def456_receipt.png",
+      "mimeType": "image/png",
+      "fileSize": 128456,
+      "uploadedAt": "2026-05-06T10:25:00.000Z"
+    }
+  ]
+}
+```
+
+**cURL Example:**
+```bash
+curl "http://localhost:5000/upload/recent?limit=10" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+---
+
+### 3. Delete Upload
+**DELETE** `/upload/:uploadId`
+
+**Authentication:** Required (JWT)
+
+**Path Parameters:**
+- `uploadId` (required) - ID of the upload to delete
+
+**Response (200):**
+```json
+{
+  "status": "success",
+  "message": "Upload deleted successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+**Errors:**
+- `404` - Upload not found or unauthorized
+- `401` - Unauthorized
+- `500` - Server error
+
+---
+
+## Integration with Profile & Reimbursement
+
+### Update Profile with Image
+**PATCH** `/profiles/me`
+
+```json
+{
+  "full_name": "John Doe",
+  "phone_number": "+1234567890",
+  "address": "123 Main St",
+  "profile_picture_url": "http://localhost:5000/uploads/1715000000_abc123_photo.jpg"
+}
+```
+
+### Create Reimbursement with Receipt
+**POST** `/reimbursements`
+
+```json
+{
+  "title": "Office supplies",
+  "description": "Purchased printer ink",
+  "amount": 50.00,
+  "attachmentUrl": "http://localhost:5000/uploads/1715000100_def456_receipt.png"
+}
+```
+
+---
+
 ## Rate Limiting
 
 - **Login:** 5 requests per 15 minutes per IP
 - **Attendance:** 60 requests per minute per IP
+- **Image Upload:** 30 uploads per hour per user
 - **General API:** Standard rate limits apply
 
 ---

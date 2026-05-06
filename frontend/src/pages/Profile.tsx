@@ -5,6 +5,8 @@ import ErrorAlert from '../components/common/ErrorAlert'
 import SkeletonLoader from '../components/common/SkeletonLoader'
 import { showToast } from '../components/common/ToastContainer'
 import Input from '../components/Input'
+import ImageUploader from '../components/common/ImageUploader'
+import RecentImages from '../components/common/RecentImages'
 import { useAuth } from '../hooks/useAuth'
 import { useLoading } from '../hooks/useLoading'
 import api from '../services/api'
@@ -31,6 +33,7 @@ export default function Profile(): JSX.Element {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showRecentImages, setShowRecentImages] = useState(false)
 
   // Fetch profile data on mount
   useEffect(() => {
@@ -118,7 +121,7 @@ export default function Profile(): JSX.Element {
       const payload = {
         address: profile.address || undefined,
         phone_number: profile.phone_number || undefined,
-        profile_picture_url: profile.profile_picture_url || undefined,
+        profile_picture_url: profile.profile_picture_url ? profile.profile_picture_url : null,
       }
       await withLoading(() => api.patch('/profiles/me', payload))
       
@@ -197,13 +200,32 @@ export default function Profile(): JSX.Element {
             />
           </div>
 
-          <Input
-            label="Profile picture URL"
-            placeholder="https://..."
-            value={profile.profile_picture_url || ''}
-            onChange={(event) => setProfile({ ...profile, profile_picture_url: event.target.value })}
-          />
+          <label className="field">
+            <span className="field-label">Profile Picture</span>
+            <ImageUploader
+              onImageUpload={(imageUrl) => setProfile({ ...profile, profile_picture_url: imageUrl })}
+              onClear={() => setProfile({ ...profile, profile_picture_url: '' })}
+              currentImageUrl={profile.profile_picture_url}
+              disabled={saving}
+            />
+            <Button 
+              type="button" 
+              variant="secondary" 
+              size="small"
+              onClick={() => setShowRecentImages(true)}
+              disabled={saving}
+              style={{ marginTop: '0.5rem' }}
+            >
+              Choose from recent uploads
+            </Button>
+          </label>
 
+          <RecentImages
+            isOpen={showRecentImages}
+            onClose={() => setShowRecentImages(false)}
+            onSelectImage={(imageUrl) => setProfile({ ...profile, profile_picture_url: imageUrl })}
+            currentImageUrl={profile.profile_picture_url}
+          />
 
           <div className="form-actions">
             <Button type="submit" variant="primary" loading={saving}>Save changes</Button>

@@ -69,7 +69,7 @@ export const profileService = {
       // Prefer the submitted display name; fall back to email only if no name was provided.
       const userResult = await pool.query('SELECT email FROM users WHERE user_id = $1 LIMIT 1', [userId]);
       if (userResult.rowCount !== 1) {
-        throw new Error('User not found');
+        throw new ApiError(404, 'User tidak ditemukan');
       }
 
       const fullName = data.full_name ?? userResult.rows[0].email;

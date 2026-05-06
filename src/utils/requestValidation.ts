@@ -28,17 +28,17 @@ export const isoDateSchema = z
   .refine(isValidIsoDate, 'Tanggal tidak valid');
 
 export const loginSchema = z.object({
-  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
-  password: z.string({ required_error: 'Password is required' }).min(8, 'Password minimal 8 karakter'),
+  email: z.string().trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
+  password: z.string().min(8, 'Password minimal 8 karakter'),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
+  email: z.string().trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string({ required_error: 'Token is required' }).min(10, 'Token reset tidak valid'),
-  newPassword: z.string({ required_error: 'New password is required' }).min(8, 'Password minimal 8 karakter'),
+  token: z.string().min(10, 'Token reset tidak valid'),
+  newPassword: z.string().min(8, 'Password minimal 8 karakter'),
 });
 
 export const profileUpdateSchema = z.object({
@@ -144,7 +144,7 @@ export function parseWithSchema<T>(schema: z.ZodType<T>, data: unknown): T {
   if (!result.success) {
     const details = result.error.issues.map((issue) => ({
       path: issue.path.join('.') || 'root',
-      message: issue.message,
+      message: formatZodIssueMessage(issue),
       code: issue.code,
     }));
 
@@ -156,4 +156,17 @@ export function parseWithSchema<T>(schema: z.ZodType<T>, data: unknown): T {
   }
 
   return result.data;
+}
+
+function formatZodIssueMessage(issue: z.ZodIssue): string {
+  if (issue.code === 'invalid_type') {
+    const field = issue.path.join('.') || 'field';
+    const rawMessage = issue.message.toLowerCase();
+
+    if (rawMessage.includes('undefined')) {
+      return `Field '${field}' is required`;
+    }
+  }
+
+  return issue.message;
 }

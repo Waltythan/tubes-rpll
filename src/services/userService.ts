@@ -2,10 +2,10 @@ import bcrypt from 'bcrypt';
 import { ApiError } from '../utils/apiError';
 import { activityLogService } from './activityLogService';
 import { profileService } from './profileService';
+import pool from './db';
 
 type UserCreateInput = {
   departmentId?: number | null;
-  name?: string | null;
   email: string;
   full_name?: string | null;
   name?: string | null;
@@ -130,7 +130,6 @@ export const userService = {
        RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
       [
         input.departmentId || null,
-        input.name || null,
         input.email,
         hashedPassword,
         input.role,
@@ -187,11 +186,10 @@ export const userService = {
            manager_id = COALESCE($7, manager_id),
            "updatedAt" = NOW()
        WHERE user_id = $1
-       RETURNING user_id, department_id, name, email, role, base_salary, manager_id, "createdAt"`,
+       RETURNING user_id, department_id, email, role, base_salary, manager_id, "createdAt"`,
       [
         userId,
         input.departmentId ?? null,
-        input.name ?? null,
         input.email ?? null,
         passwordValue,
         input.role ?? null,

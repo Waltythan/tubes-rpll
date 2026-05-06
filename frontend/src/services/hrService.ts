@@ -53,6 +53,7 @@ export interface ReimbursementItem {
 export interface CreateReimbursementInput {
   amount: number
   description: string
+  attachmentUrl?: string
 }
 
 export interface PayrollAdjustmentItem {

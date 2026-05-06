@@ -5,7 +5,7 @@ import { userService } from '../services/userService';
 import { ApiError } from '../utils/apiError';
 import { sendResponse } from '../utils/apiResponse';
 import { extractClientIp } from '../utils/ipCheck';
-import { ApiError } from '../utils/apiError';
+import { parseWithSchema, positiveIntSchema, userCreateSchema, userUpdateSchema } from '../utils/requestValidation';
 
 const router = express.Router();
 

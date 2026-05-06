@@ -8,6 +8,7 @@ export default function Navbar(): JSX.Element {
   const role = String(user?.role || user?.roles || 'staff').toLowerCase()
   const isAdmin = role === 'admin'
   const roleLabel = isAdmin ? 'Admin' : role === 'manager' ? 'Manager' : 'Staff'
+  const displayName = user?.full_name || user?.fullName || user?.name || 'Signed in'
 
   function handleLogout(): void {
     logout()
@@ -25,7 +26,7 @@ export default function Navbar(): JSX.Element {
 
       <div className="topbar-user">
         <div className="topbar-user-meta">
-          <span className="topbar-user-email">{user?.name || user?.fullName || user?.full_name || user?.email || 'Signed in'}</span>
+          <span className="topbar-user-email">{displayName}</span>
           <span className={['badge', isAdmin ? 'badge-success' : 'badge-neutral'].join(' ')}>
             {roleLabel}
           </span>

@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { ApiError } from '../utils/apiError';
 import { activityLogService } from './activityLogService';
+import pool from './db';
 
 type UserCreateInput = {
   departmentId?: number | null;

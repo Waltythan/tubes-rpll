@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import Button from '../components/common/Button'
 import ErrorAlert from '../components/common/ErrorAlert'
-import Input from '../components/common/Input'
 import { showToast } from '../components/common/ToastContainer'
 import { hrService, type DepartmentItem, type UserItem } from '../services/hrService'
 
@@ -168,9 +167,20 @@ export default function Users(): JSX.Element {
         <Card>
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gap: 12 }}>
-              <Input label="Name" ref={nameRef} defaultValue={editing?.name || editing?.full_name || editing?.fullName || ''} />
-              <Input label="Email" ref={emailRef} defaultValue={editing?.email || ''} type="email" />
-              {!editing && <Input label="Password" ref={passwordRef} type="password" />}
+              <label className="field">
+                <span className="field-label">Name</span>
+                <input type="text" className="input" ref={nameRef} defaultValue={editing?.name || editing?.full_name || editing?.fullName || ''} />
+              </label>
+              <label className="field">
+                <span className="field-label">Email</span>
+                <input type="email" className="input" ref={emailRef} defaultValue={editing?.email || ''} />
+              </label>
+              {!editing && (
+                <label className="field">
+                  <span className="field-label">Password</span>
+                  <input type="password" className="input" ref={passwordRef} />
+                </label>
+              )}
               <label className="field">
                 <span className="field-label">Role</span>
                 <select className="input" ref={roleRef} defaultValue={editing?.role || editing?.roles || 'staff'}>

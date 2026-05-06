@@ -5,6 +5,14 @@ import { userService } from '../services/userService';
 import { ApiError } from '../utils/apiError';
 import { sendResponse } from '../utils/apiResponse';
 import { extractClientIp } from '../utils/ipCheck';
+import {
+  parseWithSchema,
+  positiveIntSchema,
+  sanitizeUserPayload,
+  stripUndefinedFields,
+  userCreateSchema,
+  userUpdateSchema,
+} from '../utils/requestValidation';
 
 const router = express.Router();
 
@@ -39,25 +47,27 @@ router.get('/departments', requireRoles('admin', 'manager'), async (_req: AuthRe
 
 router.post('/', requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    console.log('POST /users body:', req.body);
-    const body = req.body || {};
-    const creatorId = req.user?.id;
-    if (!creatorId) {
-      throw new ApiError(401, 'Authenticated user id is missing');
-    }
-    const clientIp = extractClientIp(req as Request);
-    const userAgent = req.headers['user-agent'] as string | undefined;
+    const body = req.body || {}
+    const creatorId = req.user?.id
+    if (!creatorId) throw new ApiError(401, 'Authenticated user id is missing')
+
+    const clientIp = extractClientIp(req as Request)
+    const userAgent = req.headers['user-agent'] as string | undefined
+
+    const sanitized = stripUndefinedFields(sanitizeUserPayload(body))
+    const validatedPayload = parseWithSchema(userCreateSchema, sanitized)
 
     const created = await userService.createUser(
       validatedPayload,
-      parseWithSchema(positiveIntSchema, req.user!.id),
-      { ipAddress: clientIp, userAgent: userAgent }
-    );
-    sendResponse(res, 201, 'User created', created);
+      parseWithSchema(positiveIntSchema, creatorId),
+      { ipAddress: clientIp, userAgent }
+    )
+
+    sendResponse(res, 201, 'User created', created)
   } catch (error) {
-    next(error);
+    next(error)
   }
-});
+})
 
 router.patch('/:userId', requireRoles('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

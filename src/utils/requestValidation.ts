@@ -28,17 +28,17 @@ export const isoDateSchema = z
   .refine(isValidIsoDate, 'Tanggal tidak valid');
 
 export const loginSchema = z.object({
-  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
-  password: z.string({ required_error: 'Password is required' }).min(8, 'Password minimal 8 karakter'),
+  email: z.string().trim().nonempty('Email is required').email('Format email tidak valid').transform((s) => s.toLowerCase()),
+  password: z.string().nonempty('Password is required').min(8, 'Password minimal 8 karakter'),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string({ required_error: 'Email is required' }).trim().email('Format email tidak valid').transform((s) => s.toLowerCase()),
+  email: z.string().trim().nonempty('Email is required').email('Format email tidak valid').transform((s) => s.toLowerCase()),
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string({ required_error: 'Token is required' }).min(10, 'Token reset tidak valid'),
-  newPassword: z.string({ required_error: 'New password is required' }).min(8, 'Password minimal 8 karakter'),
+  token: z.string().trim().nonempty('Token is required').min(10, 'Token reset tidak valid'),
+  newPassword: z.string().nonempty('New password is required').min(8, 'Password minimal 8 karakter'),
 });
 
 export const profileUpdateSchema = z.object({
@@ -156,4 +156,28 @@ export function parseWithSchema<T>(schema: z.ZodType<T>, data: unknown): T {
   }
 
   return result.data;
+}
+
+export function stripUndefinedFields<T extends Record<string, unknown>>(obj: T | undefined): T | {} {
+  if (!obj || typeof obj !== 'object') return {}
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      out[k] = stripUndefinedFields(v as Record<string, unknown>)
+    } else {
+      out[k] = v
+    }
+  }
+  return out as T
+}
+
+export function sanitizeUserPayload(payload: Record<string, unknown> | undefined) {
+  if (!payload || typeof payload !== 'object') return {}
+  const allowed = ['departmentId', 'email', 'full_name', 'name', 'password', 'role', 'baseSalary', 'managerId']
+  const out: Record<string, unknown> = {}
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(payload, key)) out[key] = (payload as any)[key]
+  }
+  return out
 }

@@ -16,42 +16,32 @@ export default function ForgotPassword(): JSX.Element {
   const { withLoading } = useLoading()
 
   function validateEmail(value: string): string | null {
-    if (!value.trim()) {
-      return 'Email is required'
-    }
-
-    if (!/^\S+@\S+\.\S+$/.test(value.trim())) {
-      return 'Enter a valid email address'
-    }
-
+    if (!value.trim()) return 'Email is required'
+    if (!/^\S+@\S+\.\S+$/.test(value.trim())) return 'Enter a valid email address'
     return null
   }
 
   async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
 
-    const emailError = validateEmail(email)
-    setEmailError(emailError)
+    const err = validateEmail(email)
+    setEmailError(err)
     setApiError(null)
     setSuccessMessage(null)
-
-    if (emailError) {
-      return
-    }
+    if (err) return
 
     setSubmitting(true)
-
     try {
       const result = await withLoading(() => forgotPassword(email.trim().toLowerCase()))
-      setSuccessMessage('Reset token generated. Redirecting to password reset...')
-
-      if (result.resetToken) {
+      setSuccessMessage('If the email exists, a reset link has been sent.')
+      const token = result.resetToken
+      if (token) {
         window.setTimeout(() => {
-          navigate(`/reset-password?token=${encodeURIComponent(result.resetToken || '')}`, { replace: true })
+          navigate(`/reset-password?token=${encodeURIComponent(token)}`, { replace: true })
         }, 700)
       }
-    } catch (err: unknown) {
-      setApiError(err instanceof Error ? err.message : 'Failed to send reset link')
+    } catch (e: unknown) {
+      setApiError(e instanceof Error ? e.message : 'Failed to send reset link')
     } finally {
       setSubmitting(false)
     }
@@ -65,7 +55,39 @@ export default function ForgotPassword(): JSX.Element {
           <h1>Reset access</h1>
           <p className="muted">Request a password reset link without revealing whether the email is registered.</p>
         </div>
-      </form>
-    </AuthLayout>
+
+        <Card className="auth-card">
+          <div className="page-heading compact">
+            <div>
+              <p className="eyebrow">Account recovery</p>
+              <h2>Forgot password</h2>
+            </div>
+          </div>
+
+          <form className="form-grid" onSubmit={submit}>
+            <Input
+              label="Email"
+              type="email"
+              placeholder="name@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={submitting}
+              helperText={emailError || 'We will not reveal if the email exists'}
+            />
+
+            {apiError && <div className="alert alert-error">{apiError}</div>}
+            {successMessage && <div className="alert alert-success">{successMessage}</div>}
+
+            <Button type="submit" variant="primary" fullWidth disabled={submitting}>
+              {submitting ? 'Sending...' : 'Send reset link'}
+            </Button>
+
+            <div className="auth-links">
+              <Link to="/login">Back to login</Link>
+            </div>
+          </form>
+        </Card>
+      </div>
+    </div>
   )
 }

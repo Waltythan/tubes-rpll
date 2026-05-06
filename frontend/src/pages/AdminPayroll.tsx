@@ -24,8 +24,9 @@ const monthOptions = [
   { value: 12, label: 'December' },
 ] as const
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
+function formatCurrency(value: number | string): string {
+  const num = typeof value === 'string' ? Number(value) : value
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num)
 }
 
 function formatPeriod(start: string, end: string): string {
@@ -56,8 +57,8 @@ export default function AdminPayroll(): JSX.Element {
     try {
       setLoading(true)
       setError(null)
-      const response = await withLoading(() => hrService.generatePayroll(month, year))
-      setResult(response)
+      const response = await withLoading(() => hrService.generatePayroll({ month, year }))
+      setResult(response as unknown as PayrollGenerationResult)
       showToast('Payroll generated successfully', 'success')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to generate payroll'
@@ -166,7 +167,7 @@ export default function AdminPayroll(): JSX.Element {
                   </tr>
                 </thead>
                 <tbody>
-                  {result.generatedPayrolls.map((row) => (
+                  {result.generatedPayrolls.map((row: { userId: number; payrollId: number; netSalary: number | string }) => (
                     <tr key={row.payrollId}>
                       <td className="table-cell">{row.userId}</td>
                       <td className="table-cell">{row.payrollId}</td>

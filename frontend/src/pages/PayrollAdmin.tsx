@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import Button from '../components/common/Button'
 import Card from '../components/Card'
+import Button from '../components/common/Button'
 import EmptyState from '../components/common/EmptyState'
 import ErrorAlert from '../components/common/ErrorAlert'
 import { showToast } from '../components/common/ToastContainer'
@@ -202,7 +202,7 @@ export default function PayrollAdmin(): JSX.Element {
     setError(null)
 
     try {
-      await hrService.generatePayroll(month, parsedYear)
+      await hrService.generatePayroll({ month, year: parsedYear })
       showToast('Payroll generated successfully', 'success')
       await refreshPayrolls()
     } catch (err: unknown) {

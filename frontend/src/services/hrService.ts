@@ -29,7 +29,7 @@ export interface LeaveItem {
   updatedAt?: string
 }
 
-export interface CreateLeaveRequestInput {
+export interface CreateLeaveRequestInput extends Record<string, unknown> {
   startDate: string
   endDate: string
   reason: string
@@ -50,9 +50,16 @@ export interface ReimbursementItem {
   updatedAt?: string
 }
 
-export interface CreateReimbursementInput {
+export interface CreateReimbursementInput extends Record<string, unknown> {
   amount: number
   description: string
+}
+
+export interface PayrollGenerationResult {
+  periodStart: string
+  periodEnd: string
+  payrollCount: number
+  generatedPayrolls: Array<{ userId: number; payrollId: number; netSalary: number | string }>
 }
 
 export interface PayrollAdjustmentItem {
@@ -113,7 +120,7 @@ export interface ProfileItem {
   profile_picture_url?: string | null
 }
 
-export interface ProfileUpdateInput {
+export interface ProfileUpdateInput extends Record<string, unknown> {
   full_name?: string
   address?: string
   phone_number?: string

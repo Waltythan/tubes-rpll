@@ -1,7 +1,7 @@
-import pool from './db';
 import { ApiError } from '../utils/apiError';
-import { activityLogService } from './activityLogService';
 import { enrichWithUserAndApprover } from '../utils/userEnricher';
+import { activityLogService } from './activityLogService';
+import pool from './db';
 
 async function recalculatePayrollTotals(client: { query: Function }, params: {
   payrollId: number;

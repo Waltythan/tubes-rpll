@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { showToast } from './ToastContainer'
-import Button from './Button'
 import '../../styles/RecentImages.css'
+import Button from './Button'
+import { showToast } from './ToastContainer'
 
 interface UploadedImage {
   id: number
@@ -33,7 +33,8 @@ export default function RecentImages({ onSelectImage, onClose, isOpen, currentIm
       setLoading(true)
       setError(null)
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/upload/recent?limit=20`, {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+        const response = await fetch(`${apiBaseUrl}/upload/recent?limit=20`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
           },

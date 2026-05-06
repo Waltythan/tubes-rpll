@@ -8,6 +8,7 @@ import AdminAttendance from './pages/AdminAttendance'
 import AdminEditProfile from './pages/AdminEditProfile'
 import AdminPayroll from './pages/AdminPayroll'
 import AdminPenalty from './pages/AdminPenalty'
+import AdminResetRequests from './pages/AdminResetRequests'
 import Attendance from './pages/Attendance'
 import AttendanceConfirm from './pages/AttendanceConfirm'
 import Dashboard from './pages/Dashboard'
@@ -70,6 +71,7 @@ export default function App(): JSX.Element {
           <Route path="/admin/profiles/:userId" element={<AdminEditProfile />} />
           <Route path="/admin/payroll" element={<AdminPayroll />} />
           <Route path="/admin/penalty" element={<AdminPenalty />} />
+          <Route path="/admin/reset-requests" element={<AdminResetRequests />} />
           <Route path="/activity-logs" element={<ActivityLogs />} />
           <Route path="/admin/attendance" element={<AdminAttendance />} />
         </Route>

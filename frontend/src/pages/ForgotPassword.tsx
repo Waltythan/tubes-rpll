@@ -4,7 +4,7 @@ import AuthLayout from '../components/AuthLayout'
 import Input from '../components/Input'
 import Button from '../components/common/Button'
 import { useLoading } from '../hooks/useLoading'
-import { forgotPassword, getDevResetToken } from '../services/authService'
+import { requestPasswordReset } from '../services/authService'
 
 export default function ForgotPassword(): JSX.Element {
   const navigate = useNavigate()
@@ -43,19 +43,13 @@ export default function ForgotPassword(): JSX.Element {
 
     try {
       const normalizedEmail = email.trim().toLowerCase()
-      await withLoading(() => forgotPassword(normalizedEmail))
-      setSuccessMessage('If email exists, reset instructions have been sent')
-
-      if (import.meta.env.DEV) {
-        const result = await withLoading(() => getDevResetToken(normalizedEmail))
-        if (result.resetToken) {
-          window.setTimeout(() => {
-            navigate(`/reset-password?token=${encodeURIComponent(result.resetToken || '')}`, { replace: true })
-          }, 700)
-        }
-      }
+      await withLoading(() => requestPasswordReset(normalizedEmail))
+      setSuccessMessage('Your request has been submitted. Please wait for admin approval.')
+      window.setTimeout(() => {
+        navigate('/login', { replace: true })
+      }, 900)
     } catch (err: unknown) {
-      setApiError(err instanceof Error ? err.message : 'Failed to send reset link')
+      setApiError(err instanceof Error ? err.message : 'Failed to submit reset request')
     } finally {
       setSubmitting(false)
     }
@@ -63,8 +57,8 @@ export default function ForgotPassword(): JSX.Element {
 
   return (
     <AuthLayout
-      heading="Reset access"
-      description="Request a password reset link without revealing whether the email is registered. In development, the reset token is available for the demo flow after submission."
+      heading="Request Password Reset"
+      description="Submit a request and admin will reset your password."
     >
       <form className="form-grid" onSubmit={submit}>
         <Input
@@ -81,7 +75,7 @@ export default function ForgotPassword(): JSX.Element {
         {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
         <Button type="submit" variant="primary" fullWidth loading={submitting} disabled={submitting}>
-          Send Reset Link
+          Submit Request
         </Button>
 
         <div className="auth-links">

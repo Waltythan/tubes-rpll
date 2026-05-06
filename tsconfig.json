@@ -13,5 +13,5 @@
   }
   ,
   "include": ["src/**/*.ts"],
-  "exclude": ["frontend", "node_modules", "dist"]
+  "exclude": ["frontend", "node_modules"]
 }

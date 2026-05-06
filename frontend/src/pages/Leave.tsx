@@ -120,11 +120,15 @@ export default function Leave(): JSX.Element {
                 </div>
                 <div className="prominent-status">
                   <StatusBadge status={item.status || 'pending'} />
-                  {item.approved_by && (
-                    <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
-                      By: #{item.approved_by}
+                  {item.approvedBy ? (
+                    <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }} title={item.approvedBy.email}>
+                      Approved by: {item.approvedBy.name}
                     </div>
-                  )}
+                  ) : item.approved_by ? (
+                    <div className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
+                      Approved by: Unknown Approver
+                    </div>
+                  ) : null}
                   {item.updatedAt && (
                     <div className="muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
                       {new Date(item.updatedAt).toLocaleString()}

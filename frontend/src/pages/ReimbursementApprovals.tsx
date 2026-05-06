@@ -153,7 +153,7 @@ export default function ReimbursementApprovals(): JSX.Element {
               <div className="section-header">
                 <div className="approval-card-header">
                   <div>
-                    <p className="card-title">User #{item.user_id ?? '—'}</p>
+                    <p className="card-title" title={item.user?.email}>{item.user?.name || 'Unknown User'}</p>
                     <h3>{item.title || 'Reimbursement request'} #{item.id}</h3>
                   </div>
                   <StatusBadge status={item.status || 'pending'} />

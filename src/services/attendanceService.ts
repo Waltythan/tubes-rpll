@@ -4,6 +4,7 @@ import { ApiError } from '../utils/apiError';
 import { isOfficeIp } from '../utils/ipCheck';
 import { UserRole } from '../utils/jwtHelper';
 import pool from './db';
+import { enrichWithUserAndApprover } from '../utils/userEnricher';
 
 const QR_TOKEN_TTL_MS = 600_000; // 10 minutes - allows time for scan + navigate + confirm workflow
 const CLIENT_URL = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -318,7 +319,7 @@ export const attendanceService = {
          ORDER BY date DESC`,
         [userId, from || null, to || null]
       );
-      return result.rows as AttendanceRow[];
+      return enrichWithUserAndApprover(result.rows) as Promise<AttendanceRow[]>;
     } finally {
       client.release();
     }
@@ -333,7 +334,7 @@ export const attendanceService = {
            FROM attendances
            ORDER BY date DESC`
         );
-        return allRows.rows as AttendanceRow[];
+        return enrichWithUserAndApprover(allRows.rows) as Promise<AttendanceRow[]>;
       }
 
       if (requester.role !== 'manager') {
@@ -349,7 +350,7 @@ export const attendanceService = {
         [requester.id]
       );
 
-      return rows.rows as AttendanceRow[];
+      return enrichWithUserAndApprover(rows.rows) as Promise<AttendanceRow[]>;
     } finally {
       client.release();
     }

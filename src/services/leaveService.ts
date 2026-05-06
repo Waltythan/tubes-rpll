@@ -1,6 +1,7 @@
 import pool from './db';
 import { ApiError } from '../utils/apiError';
 import { activityLogService } from './activityLogService';
+import { enrichWithUserAndApprover } from '../utils/userEnricher';
 
 type LeaveInput = {
   userId: number;
@@ -152,7 +153,7 @@ export const leaveService = {
        ORDER BY "createdAt" DESC`,
       [userId]
     );
-    return result.rows;
+    return enrichWithUserAndApprover(result.rows);
   },
 
   async listTeam(managerId: number, role: 'admin' | 'manager' | 'staff') {
@@ -163,7 +164,7 @@ export const leaveService = {
          JOIN users u ON u.user_id = lr.user_id
          ORDER BY "createdAt" DESC`
       );
-      return all.rows;
+      return enrichWithUserAndApprover(all.rows);
     }
 
     if (role !== 'manager') {
@@ -188,6 +189,6 @@ export const leaveService = {
       [managerId]
     );
 
-    return team.rows;
+    return enrichWithUserAndApprover(team.rows);
   },
 };

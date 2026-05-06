@@ -13,7 +13,7 @@ function getUserId(user: UserItem): number | null {
 }
 
 function getUserLabel(user: UserItem): string {
-  return user.name || user.full_name || user.fullName || user.email || `#${getUserId(user) || 'unknown'}`
+  return user.name || user.full_name || user.fullName || user.email || 'Unknown User'
 }
 
 export default function Users(): JSX.Element {
@@ -278,8 +278,8 @@ export default function Users(): JSX.Element {
                   const userId = getUserId(user)
                   const managerId = user.manager_id || user.managerId || null
                   const departmentId = user.department_id || null
-                  const managerName = managerId ? managerLookup.get(managerId) || `#${managerId}` : '—'
-                  const departmentName = departmentId ? departmentLookup.get(departmentId) || `#${departmentId}` : '—'
+                  const managerName = managerId ? managerLookup.get(managerId) || 'Unknown Manager' : '—'
+                  const departmentName = departmentId ? departmentLookup.get(departmentId) || 'Unknown Department' : '—'
 
                   return (
                     <tr key={userId || user.email}>

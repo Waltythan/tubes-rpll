@@ -1,5 +1,6 @@
 import { PoolClient } from 'pg';
 import pool from './db';
+import { enrichWithUserAndApprover } from '../utils/userEnricher';
 
 type LogParams = {
   userId: number;
@@ -63,6 +64,6 @@ export const activityLogService = {
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
-    return result.rows;
+    return enrichWithUserAndApprover(result.rows);
   },
 };

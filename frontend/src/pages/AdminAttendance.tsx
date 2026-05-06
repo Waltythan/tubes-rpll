@@ -209,7 +209,7 @@ export default function AdminAttendance(): JSX.Element {
               <div className="edit-modal">
                 <div className="modal-header">
                   <h3 className="modal-title">
-                    Edit Attendance - {editingItem.employee_name || editingItem.full_name || `User #${editingItem.user_id}`}
+                    Edit Attendance - {editingItem.user?.name || editingItem.employee_name || editingItem.full_name || 'Unknown User'}
                   </h3>
                   <button
                     className="modal-close"
@@ -294,8 +294,8 @@ export default function AdminAttendance(): JSX.Element {
                   {items.map((item) => (
                     <tr key={`${item.id}-${item.clock_in}`}>
                       <td>
-                        <span className="employee-name">
-                          {item.employee_name || item.full_name || `User #${item.user_id || item.id}`}
+                        <span className="employee-name" title={item.user?.email}>
+                          {item.user?.name || item.employee_name || item.full_name || 'Unknown User'}
                         </span>
                       </td>
                       <td>{formatDate(item.date || item.clock_in || item.createdAt)}</td>

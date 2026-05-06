@@ -1,4 +1,5 @@
 import api from './api'
+import { UserReference } from './hrService'
 
 interface BackendResponse<T> {
   status: string
@@ -13,6 +14,7 @@ export interface ActivityLogItem {
   target_id?: string | null
   ip_address?: string | null
   created_at?: string
+  user?: UserReference
 }
 
 export interface ActivityLogPage {

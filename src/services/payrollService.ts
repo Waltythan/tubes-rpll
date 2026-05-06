@@ -1,6 +1,7 @@
 import pool from './db';
 import { ApiError } from '../utils/apiError';
 import { activityLogService } from './activityLogService';
+import { enrichWithUserAndApprover } from '../utils/userEnricher';
 
 async function recalculatePayrollTotals(client: { query: Function }, params: {
   payrollId: number;
@@ -170,7 +171,7 @@ export const payrollService = {
       [userId]
     );
 
-    return result.rows;
+    return enrichWithUserAndApprover(result.rows);
   },
 
   async addAdjustment(params: {

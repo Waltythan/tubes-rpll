@@ -10,7 +10,7 @@ function getUserId(user: UserItem): number | null {
 }
 
 function getUserName(user: UserItem): string {
-  return user.name || user.full_name || user.fullName || user.email || `#${getUserId(user) || 'unknown'}`
+  return user.name || user.full_name || user.fullName || user.email || 'Unknown User'
 }
 
 function getRole(user: UserItem): string {
@@ -139,7 +139,7 @@ export default function OrgChart(): JSX.Element {
           {groups.map((group) => {
             const managerId = getUserId(group.manager)
             const managerDepartment = group.manager.department_id
-              ? departmentMap.get(group.manager.department_id) || `Department #${group.manager.department_id}`
+              ? departmentMap.get(group.manager.department_id) || 'Unknown Department'
               : 'No department'
 
             return (
@@ -158,7 +158,7 @@ export default function OrgChart(): JSX.Element {
                   <div className="stacked-cards">
                     {group.members.map((member) => {
                       const memberDepartment = member.department_id
-                        ? departmentMap.get(member.department_id) || `Department #${member.department_id}`
+                        ? departmentMap.get(member.department_id) || 'Unknown Department'
                         : 'No department'
                       return (
                         <div key={getUserId(member) || member.email} className="status-row">

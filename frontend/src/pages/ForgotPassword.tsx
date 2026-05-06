@@ -44,7 +44,7 @@ export default function ForgotPassword(): JSX.Element {
     try {
       const normalizedEmail = email.trim().toLowerCase()
       await withLoading(() => requestPasswordReset(normalizedEmail))
-      setSuccessMessage('If the account exists, a reset request has been submitted')
+      setSuccessMessage('Your request has been submitted. Please wait for admin approval.')
       window.setTimeout(() => {
         navigate('/login', { replace: true })
       }, 900)
@@ -57,8 +57,8 @@ export default function ForgotPassword(): JSX.Element {
 
   return (
     <AuthLayout
-      heading="Reset access"
-      description="Submit a password reset request. Admin will review and approve before your password is reset."
+      heading="Request Password Reset"
+      description="Submit a request and admin will reset your password."
     >
       <form className="form-grid" onSubmit={submit}>
         <Input
@@ -75,7 +75,7 @@ export default function ForgotPassword(): JSX.Element {
         {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
         <Button type="submit" variant="primary" fullWidth loading={submitting} disabled={submitting}>
-          Request Password Reset
+          Submit Request
         </Button>
 
         <div className="auth-links">

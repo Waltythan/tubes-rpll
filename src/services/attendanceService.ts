@@ -3,11 +3,22 @@ import { PoolClient } from 'pg';
 import { ApiError } from '../utils/apiError';
 import { isOfficeIp } from '../utils/ipCheck';
 import { UserRole } from '../utils/jwtHelper';
-import pool from './db';
 import { enrichWithUserAndApprover } from '../utils/userEnricher';
+import pool from './db';
 
 const QR_TOKEN_TTL_MS = 600_000; // 10 minutes - allows time for scan + navigate + confirm workflow
 const CLIENT_URL = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+const ATTENDANCE_LATE_TIME = process.env.ATTENDANCE_LATE_TIME || '09:05';
+
+function buildLateBoundary(dateKey: string): Date {
+  const [hourPart, minutePart] = ATTENDANCE_LATE_TIME.split(':').map((value) => Number(value));
+  const hours = Number.isFinite(hourPart) ? hourPart : 9;
+  const minutes = Number.isFinite(minutePart) ? minutePart : 5;
+  const normalizedHours = String(Math.max(0, Math.min(23, hours))).padStart(2, '0');
+  const normalizedMinutes = String(Math.max(0, Math.min(59, minutes))).padStart(2, '0');
+
+  return new Date(`${dateKey}T${normalizedHours}:${normalizedMinutes}:00.000Z`);
+}
 
 type AttendanceRow = {
   id: number;
@@ -184,7 +195,7 @@ export const attendanceService = {
       const serverTimeRes = await client.query('SELECT NOW() AT TIME ZONE \'UTC\' as server_now');
       const serverNow = new Date(serverTimeRes.rows[0].server_now);
       const dateKey = serverNow.toISOString().slice(0, 10);
-      const lateBoundary = new Date(`${dateKey}T09:05:00.000Z`);
+      const lateBoundary = buildLateBoundary(dateKey);
       const status = serverNow > lateBoundary ? 'late' : 'present';
 
       let attendanceRow: AttendanceRow;
